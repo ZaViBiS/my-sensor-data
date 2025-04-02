@@ -15,15 +15,48 @@
         body {
             font-family: Arial, sans-serif;
             margin: 0;
-            padding: 20px;
+            padding: 10px;
             background-color: #f4f4f4;
+            box-sizing: border-box;
+        }
+        h1 {
+            font-size: 1.2rem;
+            text-align: center;
+            margin-bottom: 15px;
         }
         #chartContainer {
-            width: 90%;
-            margin: 20px auto;
+            width: 100%;
+            margin: 0 auto;
+            padding: 0;
+            position: relative;
+            max-width: 100%;
+            overflow-x: auto;
         }
         canvas {
-            max-height: 500px;
+            width: 100% !important;
+            height: auto !important;
+            max-height: 300px; /* Зменшена висота для телефонів */
+        }
+        /* Медіа-запит для екранів менших за 768px (телефони) */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1rem;
+            }
+            #chartContainer {
+                padding: 0 5px;
+            }
+            canvas {
+                max-height: 250px;
+            }
+        }
+        /* Медіа-запит для дуже маленьких екранів (менше 480px) */
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 0.9rem;
+            }
+            canvas {
+                max-height: 200px;
+            }
         }
     </style>
 </head>
@@ -36,10 +69,13 @@
     <script>
         // Налаштування Firebase
         const firebaseConfig = {
+            apiKey: "YOUR_API_KEY", // Замініть на ваш apiKey
             authDomain: "grow-192db.firebaseapp.com",
             databaseURL: "https://grow-192db-default-rtdb.europe-west1.firebasedatabase.app/",
             projectId: "grow-192db",
             storageBucket: "grow-192db.appspot.com",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID", // Замініть на ваш messagingSenderId
+            appId: "YOUR_APP_ID" // Замініть на ваш appId
         };
 
         // Ініціалізація Firebase
@@ -65,15 +101,8 @@
                     backgroundColor: 'rgba(186, 225, 255, 0.3)',
                     fill: false,
                     yAxisID: 'y-hum'
-                },
-                {
-                    label: 'Fan Speed',
-                    data: [],
-                    borderColor: 'rgba(186, 255, 201, 1)',
-                    backgroundColor: 'rgba(186, 255, 201, 0.3)',
-                    fill: false,
-                    yAxisID: 'y-fan'
                 }
+                // Прибираємо Fan Speed, оскільки в даних він дорівнює 0
             ]
         };
 
@@ -84,18 +113,30 @@
             data: chartData,
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
                 scales: {
                     x: {
                         type: 'time',
                         time: {
-                            unit: 'minute',
+                            unit: 'hour', // Збільшуємо одиницю часу до години для меншої кількості міток
                             displayFormats: {
-                                minute: 'yyyy-MM-dd HH:mm'
+                                hour: 'MMM d, HH:mm' // Формат: "Apr 2, 14:00"
                             }
                         },
                         title: {
                             display: true,
-                            text: 'Time'
+                            text: 'Time',
+                            font: {
+                                size: window.innerWidth < 768 ? 12 : 14
+                            }
+                        },
+                        ticks: {
+                            maxTicksLimit: 5, // Обмежуємо кількість міток на осі X
+                            maxRotation: 45,
+                            minRotation: 45,
+                            font: {
+                                size: window.innerWidth < 768 ? 10 : 12
+                            }
                         }
                     },
                     'y-temp': {
@@ -103,7 +144,15 @@
                         position: 'left',
                         title: {
                             display: true,
-                            text: 'Temperature (°C)'
+                            text: 'Temperature (°C)',
+                            font: {
+                                size: window.innerWidth < 768 ? 12 : 14
+                            }
+                        },
+                        ticks: {
+                            font: {
+                                size: window.innerWidth < 768 ? 10 : 12
+                            }
                         }
                     },
                     'y-hum': {
@@ -111,21 +160,18 @@
                         position: 'right',
                         title: {
                             display: true,
-                            text: 'Humidity (%)'
+                            text: 'Humidity (%)',
+                            font: {
+                                size: window.innerWidth < 768 ? 12 : 14
+                            }
                         },
                         grid: {
-                            drawOnChartArea: false // Щоб уникнути накладання сіток
-                        }
-                    },
-                    'y-fan': {
-                        type: 'linear',
-                        position: 'right',
-                        title: {
-                            display: true,
-                            text: 'Fan Speed'
+                            drawOnChartArea: false
                         },
-                        grid: {
-                            drawOnChartArea: false // Щоб уникнути накладання сіток
+                        ticks: {
+                            font: {
+                                size: window.innerWidth < 768 ? 10 : 12
+                            }
                         }
                     }
                 },
@@ -145,8 +191,34 @@
                                 }
                                 return label;
                             }
+                        },
+                        titleFont: {
+                            size: window.innerWidth < 768 ? 12 : 14
+                        },
+                        bodyFont: {
+                            size: window.innerWidth < 768 ? 10 : 12
+                        }
+                    },
+                    legend: {
+                        labels: {
+                            font: {
+                                size: window.innerWidth < 768 ? 12 : 14
+                            },
+                            boxWidth: window.innerWidth < 768 ? 20 : 30 // Зменшуємо розмір квадратиків у легенді
+                        },
+                        onClick: (e, legendItem, legend) => {
+                            // Дозволяємо приховувати/показувати набори даних
+                            const index = legendItem.datasetIndex;
+                            const ci = legend.chart;
+                            const meta = ci.getDatasetMeta(index);
+                            meta.hidden = meta.hidden === null ? !ci.data.datasets[index].hidden : null;
+                            ci.update();
                         }
                     }
+                },
+                interaction: {
+                    mode: 'nearest',
+                    intersect: false
                 }
             }
         });
@@ -159,7 +231,6 @@
                 chartData.labels = [];
                 chartData.datasets[0].data = []; // Температура
                 chartData.datasets[1].data = []; // Вологість
-                chartData.datasets[2].data = []; // Швидкість вентилятора
 
                 // Проходимо по всіх вузлах
                 const entries = Object.entries(data).map(([timestamp, entry]) => {
@@ -170,12 +241,15 @@
                 // Сортуємо за часом
                 entries.sort((a, b) => a.time - b.time);
 
+                // Обмежуємо кількість точок (наприклад, останні 20 записів)
+                const maxPoints = 20;
+                const limitedEntries = entries.slice(-maxPoints);
+
                 // Додаємо дані до графіка
-                entries.forEach(entry => {
+                limitedEntries.forEach(entry => {
                     chartData.labels.push(entry.time);
                     chartData.datasets[0].data.push(entry.temp); // Температура
                     chartData.datasets[1].data.push(entry.hum); // Вологість
-                    chartData.datasets[2].data.push(entry.fan_speed); // Швидкість вентилятора
                 });
 
                 // Оновлюємо графік
