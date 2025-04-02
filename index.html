@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Data Visualization with Chart.js</title>
+    <!-- Підключаємо Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Підключаємо адаптер для роботи з датами -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    <!-- Підключаємо Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        #chartContainer {
+            width: 90%;
+            margin: 20px auto;
+        }
+        canvas {
+            max-height: 500px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Firebase Data Visualization</h1>
+    <div id="chartContainer">
+        <canvas id="sensorChart"></canvas>
+    </div>
+
+    <script>
+        // Налаштування Firebase
+        const firebaseConfig = {
+            authDomain: "grow-192db.firebaseapp.com",
+            databaseURL: "https://grow-192db-default-rtdb.europe-west1.firebasedatabase.app/",
+            projectId: "grow-192db",
+            storageBucket: "grow-192db.appspot.com",
+        };
+
+        // Ініціалізація Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // Ініціалізація даних для графіка
+        let chartData = {
+            labels: [], // Мітки часу
+            datasets: [
+                {
+                    label: 'Temperature (°C)',
+                    data: [],
+                    borderColor: 'rgba(255, 179, 186, 1)',
+                    backgroundColor: 'rgba(255, 179, 186, 0.3)',
+                    fill: false,
+                    yAxisID: 'y-temp'
+                },
+                {
+                    label: 'Humidity (%)',
+                    data: [],
+                    borderColor: 'rgba(186, 225, 255, 1)',
+                    backgroundColor: 'rgba(186, 225, 255, 0.3)',
+                    fill: false,
+                    yAxisID: 'y-hum'
+                },
+                {
+                    label: 'Fan Speed',
+                    data: [],
+                    borderColor: 'rgba(186, 255, 201, 1)',
+                    backgroundColor: 'rgba(186, 255, 201, 0.3)',
+                    fill: false,
+                    yAxisID: 'y-fan'
+                }
+            ]
+        };
+
+        // Отримання контексту canvas і створення графіка
+        const ctx = document.getElementById('sensorChart').getContext('2d');
+        const sensorChart = new Chart(ctx, {
+            type: 'line',
+            data: chartData,
+            options: {
+                responsive: true,
+                scales: {
+                    x: {
+                        type: 'time',
+                        time: {
+                            unit: 'minute',
+                            displayFormats: {
+                                minute: 'yyyy-MM-dd HH:mm'
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Time'
+                        }
+                    },
+                    'y-temp': {
+                        type: 'linear',
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: 'Temperature (°C)'
+                        }
+                    },
+                    'y-hum': {
+                        type: 'linear',
+                        position: 'right',
+                        title: {
+                            display: true,
+                            text: 'Humidity (%)'
+                        },
+                        grid: {
+                            drawOnChartArea: false // Щоб уникнути накладання сіток
+                        }
+                    },
+                    'y-fan': {
+                        type: 'linear',
+                        position: 'right',
+                        title: {
+                            display: true,
+                            text: 'Fan Speed'
+                        },
+                        grid: {
+                            drawOnChartArea: false // Щоб уникнути накладання сіток
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                label += context.parsed.y;
+                                if (context.dataset.label === 'Temperature (°C)') {
+                                    label += ' °C';
+                                } else if (context.dataset.label === 'Humidity (%)') {
+                                    label += ' %';
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Отримання даних з Firebase
+        database.ref('data').on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                // Очищаємо попередні дані
+                chartData.labels = [];
+                chartData.datasets[0].data = []; // Температура
+                chartData.datasets[1].data = []; // Вологість
+                chartData.datasets[2].data = []; // Швидкість вентилятора
+
+                // Проходимо по всіх вузлах
+                const entries = Object.entries(data).map(([timestamp, entry]) => {
+                    const timeInMs = parseInt(timestamp) * 1000; // Перетворюємо секунди в мілісекунди
+                    return { time: timeInMs, ...entry };
+                });
+
+                // Сортуємо за часом
+                entries.sort((a, b) => a.time - b.time);
+
+                // Додаємо дані до графіка
+                entries.forEach(entry => {
+                    chartData.labels.push(entry.time);
+                    chartData.datasets[0].data.push(entry.temp); // Температура
+                    chartData.datasets[1].data.push(entry.hum); // Вологість
+                    chartData.datasets[2].data.push(entry.fan_speed); // Швидкість вентилятора
+                });
+
+                // Оновлюємо графік
+                sensorChart.update();
+            }
+        });
+    </script>
+</body>
+</html>
