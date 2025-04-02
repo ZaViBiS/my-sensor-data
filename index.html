@@ -3,26 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Firebase Data Visualization with Chart.js</title>
-    <!-- Підключаємо Chart.js -->
+    <title>Firebase Data Visualization</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Підключаємо адаптер для роботи з датами -->
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
-    <!-- Підключаємо Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
             margin: 0;
-            padding: 10px;
-            background-color: #f4f4f4;
+            padding: 20px;
+            background-color: #1a1a1a; /* Темний фон */
+            color: #e0e0e0; /* Світлий текст */
             box-sizing: border-box;
         }
         h1 {
-            font-size: 1.2rem;
+            font-size: 1.5rem; /* Базовий розмір заголовка */
             text-align: center;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
+            color: #ffffff; /* Білий заголовок */
         }
         #chartContainer {
             width: 100%;
@@ -30,32 +28,35 @@
             padding: 0;
             position: relative;
             max-width: 100%;
-            overflow-x: auto;
+            overflow-x: auto; /* Горизонтальна прокрутка для малих екранів */
+            background-color: #2a2a2a; /* Темний фон контейнера графіка */
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5); /* Тінь */
         }
         canvas {
-            width: 100% !important;
-            height: auto !important;
-            max-height: 300px; /* Зменшена висота для телефонів */
+            width: 100% !important; /* Графік займає всю ширину */
+            height: auto !important; /* Адаптивна висота */
+            max-height: 400px; /* Максимальна висота для десктопів */
         }
-        /* Медіа-запит для екранів менших за 768px (телефони) */
+        /* Адаптація для телефонів (екрани до 768px) */
         @media (max-width: 768px) {
             h1 {
-                font-size: 1rem;
+                font-size: 1.2rem; /* Менший заголовок */
             }
             #chartContainer {
-                padding: 0 5px;
+                padding: 0 5px; /* Легкий відступ */
             }
             canvas {
-                max-height: 250px;
+                max-height: 300px; /* Зменшена висота графіка */
             }
         }
-        /* Медіа-запит для дуже маленьких екранів (менше 480px) */
+        /* Для дуже маленьких екранів (до 480px) */
         @media (max-width: 480px) {
             h1 {
-                font-size: 0.9rem;
+                font-size: 1rem; /* Ще менший заголовок */
             }
             canvas {
-                max-height: 200px;
+                max-height: 250px; /* Ще менша висота */
             }
         }
     </style>
@@ -69,156 +70,80 @@
     <script>
         // Налаштування Firebase
         const firebaseConfig = {
-            apiKey: "YOUR_API_KEY", // Замініть на ваш apiKey
+            apiKey: "YOUR_API_KEY",
             authDomain: "grow-192db.firebaseapp.com",
             databaseURL: "https://grow-192db-default-rtdb.europe-west1.firebasedatabase.app/",
             projectId: "grow-192db",
             storageBucket: "grow-192db.appspot.com",
-            messagingSenderId: "YOUR_MESSAGING_SENDER_ID", // Замініть на ваш messagingSenderId
-            appId: "YOUR_APP_ID" // Замініть на ваш appId
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
         };
 
         // Ініціалізація Firebase
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        // Ініціалізація даних для графіка
-        let chartData = {
-            labels: [], // Мітки часу
-            datasets: [
-                {
-                    label: 'Temperature (°C)',
-                    data: [],
-                    borderColor: 'rgba(255, 179, 186, 1)',
-                    backgroundColor: 'rgba(255, 179, 186, 0.3)',
-                    fill: false,
-                    yAxisID: 'y-temp'
-                },
-                {
-                    label: 'Humidity (%)',
-                    data: [],
-                    borderColor: 'rgba(186, 225, 255, 1)',
-                    backgroundColor: 'rgba(186, 225, 255, 0.3)',
-                    fill: false,
-                    yAxisID: 'y-hum'
-                }
-                // Прибираємо Fan Speed, оскільки в даних він дорівнює 0
-            ]
-        };
-
-        // Отримання контексту canvas і створення графіка
+        // Налаштування графіка
         const ctx = document.getElementById('sensorChart').getContext('2d');
         const sensorChart = new Chart(ctx, {
             type: 'line',
-            data: chartData,
+            data: {
+                labels: [],
+                datasets: [
+                    {
+                        label: 'Temperature',
+                        data: [],
+                        borderColor: '#FF6384', /* Червоний для температури */
+                        fill: false
+                    },
+                    {
+                        label: 'Humidity',
+                        data: [],
+                        borderColor: '#36A2EB', /* Синій для вологості */
+                        fill: false
+                    },
+                    {
+                        label: 'Fan Speed',
+                        data: [],
+                        borderColor: '#4BC0C0', /* Бірюзовий для вентилятора */
+                        fill: false
+                    }
+                ]
+            },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 scales: {
                     x: {
-                        type: 'time',
-                        time: {
-                            unit: 'hour', // Збільшуємо одиницю часу до години для меншої кількості міток
-                            displayFormats: {
-                                hour: 'MMM d, HH:mm' // Формат: "Apr 2, 14:00"
-                            }
-                        },
                         title: {
                             display: true,
                             text: 'Time',
-                            font: {
-                                size: window.innerWidth < 768 ? 12 : 14
-                            }
+                            color: '#e0e0e0' /* Світлий текст осі */
                         },
                         ticks: {
-                            maxTicksLimit: 5, // Обмежуємо кількість міток на осі X
-                            maxRotation: 45,
-                            minRotation: 45,
-                            font: {
-                                size: window.innerWidth < 768 ? 10 : 12
-                            }
+                            color: '#e0e0e0' /* Світлі позначки */
                         }
                     },
-                    'y-temp': {
-                        type: 'linear',
-                        position: 'left',
+                    y: {
                         title: {
                             display: true,
-                            text: 'Temperature (°C)',
-                            font: {
-                                size: window.innerWidth < 768 ? 12 : 14
-                            }
+                            text: 'Values',
+                            color: '#e0e0e0' /* Світлий текст осі */
                         },
                         ticks: {
-                            font: {
-                                size: window.innerWidth < 768 ? 10 : 12
-                            }
-                        }
-                    },
-                    'y-hum': {
-                        type: 'linear',
-                        position: 'right',
-                        title: {
-                            display: true,
-                            text: 'Humidity (%)',
-                            font: {
-                                size: window.innerWidth < 768 ? 12 : 14
-                            }
+                            color: '#e0e0e0' /* Світлі позначки */
                         },
                         grid: {
-                            drawOnChartArea: false
-                        },
-                        ticks: {
-                            font: {
-                                size: window.innerWidth < 768 ? 10 : 12
-                            }
+                            color: '#404040' /* Світло-сіра сітка */
                         }
                     }
                 },
                 plugins: {
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                let label = context.dataset.label || '';
-                                if (label) {
-                                    label += ': ';
-                                }
-                                label += context.parsed.y;
-                                if (context.dataset.label === 'Temperature (°C)') {
-                                    label += ' °C';
-                                } else if (context.dataset.label === 'Humidity (%)') {
-                                    label += ' %';
-                                }
-                                return label;
-                            }
-                        },
-                        titleFont: {
-                            size: window.innerWidth < 768 ? 12 : 14
-                        },
-                        bodyFont: {
-                            size: window.innerWidth < 768 ? 10 : 12
-                        }
-                    },
                     legend: {
                         labels: {
-                            font: {
-                                size: window.innerWidth < 768 ? 12 : 14
-                            },
-                            boxWidth: window.innerWidth < 768 ? 20 : 30 // Зменшуємо розмір квадратиків у легенді
-                        },
-                        onClick: (e, legendItem, legend) => {
-                            // Дозволяємо приховувати/показувати набори даних
-                            const index = legendItem.datasetIndex;
-                            const ci = legend.chart;
-                            const meta = ci.getDatasetMeta(index);
-                            meta.hidden = meta.hidden === null ? !ci.data.datasets[index].hidden : null;
-                            ci.update();
+                            color: '#e0e0e0' /* Світлий текст легенди */
                         }
                     }
-                },
-                interaction: {
-                    mode: 'nearest',
-                    intersect: false
                 }
             }
         });
@@ -227,32 +152,25 @@
         database.ref('data').on('value', (snapshot) => {
             const data = snapshot.val();
             if (data) {
-                // Очищаємо попередні дані
-                chartData.labels = [];
-                chartData.datasets[0].data = []; // Температура
-                chartData.datasets[1].data = []; // Вологість
+                const labels = [];
+                const tempData = [];
+                const humData = [];
+                const fanData = [];
 
-                // Проходимо по всіх вузлах
-                const entries = Object.entries(data).map(([timestamp, entry]) => {
-                    const timeInMs = parseInt(timestamp) * 1000; // Перетворюємо секунди в мілісекунди
-                    return { time: timeInMs, ...entry };
+                // Обробка даних
+                Object.entries(data).forEach(([timestamp, entry]) => {
+                    const time = new Date(parseInt(timestamp) * 1000);
+                    labels.push(time.toLocaleTimeString());
+                    tempData.push(entry.temp);
+                    humData.push(entry.hum);
+                    fanData.push(entry.fan_speed);
                 });
 
-                // Сортуємо за часом
-                entries.sort((a, b) => a.time - b.time);
-
-                // Обмежуємо кількість точок (наприклад, останні 20 записів)
-                const maxPoints = 20;
-                const limitedEntries = entries.slice(-maxPoints);
-
-                // Додаємо дані до графіка
-                limitedEntries.forEach(entry => {
-                    chartData.labels.push(entry.time);
-                    chartData.datasets[0].data.push(entry.temp); // Температура
-                    chartData.datasets[1].data.push(entry.hum); // Вологість
-                });
-
-                // Оновлюємо графік
+                // Оновлення графіка
+                sensorChart.data.labels = labels;
+                sensorChart.data.datasets[0].data = tempData;
+                sensorChart.data.datasets[1].data = humData;
+                sensorChart.data.datasets[2].data = fanData;
                 sensorChart.update();
             }
         });
