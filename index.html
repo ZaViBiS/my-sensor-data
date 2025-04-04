@@ -1,179 +1,184 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Firebase Data Visualization</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #1a1a1a; /* Темний фон */
-            color: #e0e0e0; /* Світлий текст */
-            box-sizing: border-box;
-        }
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background-color: #1a1a1a; /* Темний фон */
+        color: #e0e0e0; /* Світлий текст */
+        box-sizing: border-box;
+      }
+      h1 {
+        font-size: 1.5rem; /* Базовий розмір заголовка */
+        text-align: center;
+        margin-bottom: 20px;
+        color: #ffffff; /* Білий заголовок */
+      }
+      #chartContainer {
+        width: 100%;
+        margin: 0 auto;
+        padding: 0;
+        position: relative;
+        max-width: 100%;
+        overflow-x: auto; /* Горизонтальна прокрутка для малих екранів */
+        background-color: #2a2a2a; /* Темний фон контейнера графіка */
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5); /* Тінь */
+      }
+      canvas {
+        width: 100% !important; /* Графік займає всю ширину */
+        height: auto !important; /* Адаптивна висота */
+        max-height: 400px; /* Максимальна висота для десктопів */
+      }
+      /* Адаптація для телефонів (екрани до 768px) */
+      @media (max-width: 768px) {
         h1 {
-            font-size: 1.5rem; /* Базовий розмір заголовка */
-            text-align: center;
-            margin-bottom: 20px;
-            color: #ffffff; /* Білий заголовок */
+          font-size: 1.2rem; /* Менший заголовок */
         }
         #chartContainer {
-            width: 100%;
-            margin: 0 auto;
-            padding: 0;
-            position: relative;
-            max-width: 100%;
-            overflow-x: auto; /* Горизонтальна прокрутка для малих екранів */
-            background-color: #2a2a2a; /* Темний фон контейнера графіка */
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5); /* Тінь */
+          padding: 0 5px; /* Легкий відступ */
         }
         canvas {
-            width: 100% !important; /* Графік займає всю ширину */
-            height: auto !important; /* Адаптивна висота */
-            max-height: 400px; /* Максимальна висота для десктопів */
+          max-height: 300px; /* Зменшена висота графіка */
         }
-        /* Адаптація для телефонів (екрани до 768px) */
-        @media (max-width: 768px) {
-            h1 {
-                font-size: 1.2rem; /* Менший заголовок */
-            }
-            #chartContainer {
-                padding: 0 5px; /* Легкий відступ */
-            }
-            canvas {
-                max-height: 300px; /* Зменшена висота графіка */
-            }
+      }
+      /* Для дуже маленьких екранів (до 480px) */
+      @media (max-width: 480px) {
+        h1 {
+          font-size: 1rem; /* Ще менший заголовок */
         }
-        /* Для дуже маленьких екранів (до 480px) */
-        @media (max-width: 480px) {
-            h1 {
-                font-size: 1rem; /* Ще менший заголовок */
-            }
-            canvas {
-                max-height: 250px; /* Ще менша висота */
-            }
+        canvas {
+          max-height: 250px; /* Ще менша висота */
         }
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <h1>Firebase Data Visualization</h1>
     <div id="chartContainer">
-        <canvas id="sensorChart"></canvas>
+      <canvas id="sensorChart"></canvas>
     </div>
 
     <script>
-        // Налаштування Firebase
-        const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "grow-192db.firebaseapp.com",
-            databaseURL: "https://grow-192db-default-rtdb.europe-west1.firebasedatabase.app/",
-            projectId: "grow-192db",
-            storageBucket: "grow-192db.appspot.com",
-            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-            appId: "YOUR_APP_ID"
-        };
+      // Налаштування Firebase
+      const firebaseConfig = {
+        apiKey: "YOUR_API_KEY",
+        authDomain: "grow-192db.firebaseapp.com",
+        databaseURL:
+          "https://grow-192db-default-rtdb.europe-west1.firebasedatabase.app/",
+        projectId: "grow-192db",
+        storageBucket: "grow-192db.appspot.com",
+        messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+        appId: "YOUR_APP_ID",
+      };
 
-        // Ініціалізація Firebase
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
+      // Ініціалізація Firebase
+      firebase.initializeApp(firebaseConfig);
+      const database = firebase.database();
 
-        // Налаштування графіка
-        const ctx = document.getElementById('sensorChart').getContext('2d');
-        const sensorChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: [],
-                datasets: [
-                    {
-                        label: 'Temperature',
-                        data: [],
-                        borderColor: '#FF6384', /* Червоний для температури */
-                        fill: false
-                    },
-                    {
-                        label: 'Humidity',
-                        data: [],
-                        borderColor: '#36A2EB', /* Синій для вологості */
-                        fill: false
-                    },
-                    {
-                        label: 'Fan Speed',
-                        data: [],
-                        borderColor: '#4BC0C0', /* Бірюзовий для вентилятора */
-                        fill: false
-                    }
-                ]
+      // Налаштування графіка
+      const ctx = document.getElementById("sensorChart").getContext("2d");
+      const sensorChart = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: [],
+          datasets: [
+            {
+              label: "Temperature",
+              data: [],
+              borderColor: "#FF6384" /* Червоний для температури */,
+              fill: true,
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Time',
-                            color: '#e0e0e0' /* Світлий текст осі */
-                        },
-                        ticks: {
-                            color: '#e0e0e0' /* Світлі позначки */
-                        }
-                    },
-                    y: {
-                        title: {
-                            display: true,
-                            text: 'Values',
-                            color: '#e0e0e0' /* Світлий текст осі */
-                        },
-                        ticks: {
-                            color: '#e0e0e0' /* Світлі позначки */
-                        },
-                        grid: {
-                            color: '#404040' /* Світло-сіра сітка */
-                        }
-                    }
-                },
-                plugins: {
-                    legend: {
-                        labels: {
-                            color: '#e0e0e0' /* Світлий текст легенди */
-                        }
-                    }
-                }
-            }
-        });
+            {
+              label: "Humidity",
+              data: [],
+              borderColor: "#36A2EB" /* Синій для вологості */,
+              fill: true,
+            },
+            {
+              label: "Fan Speed",
+              data: [],
+              borderColor: "#4BC0C0" /* Бірюзовий для вентилятора */,
+              fill: true,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: {
+            mode: "index", // Показувати всі значення для певного X
+            intersect: false, // Показувати навіть якщо курсор не точно над точкою
+          },
+          scales: {
+            x: {
+              title: {
+                display: true,
+                text: "Time",
+                color: "#e0e0e0" /* Світлий текст осі */,
+              },
+              ticks: {
+                color: "#e0e0e0" /* Світлі позначки */,
+              },
+            },
+            y: {
+              title: {
+                display: true,
+                text: "Values",
+                color: "#e0e0e0" /* Світлий текст осі */,
+              },
+              ticks: {
+                color: "#e0e0e0" /* Світлі позначки */,
+              },
+              grid: {
+                color: "#404040" /* Світло-сіра сітка */,
+              },
+            },
+          },
+          plugins: {
+            legend: {
+              labels: {
+                color: "#e0e0e0" /* Світлий текст легенди */,
+              },
+            },
+          },
+        },
+      });
 
-        // Отримання даних з Firebase
-        database.ref('data').on('value', (snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-                const labels = [];
-                const tempData = [];
-                const humData = [];
-                const fanData = [];
+      // Отримання даних з Firebase
+      database.ref("data").on("value", (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          const labels = [];
+          const tempData = [];
+          const humData = [];
+          const fanData = [];
 
-                // Обробка даних
-                Object.entries(data).forEach(([timestamp, entry]) => {
-                    const time = new Date(parseInt(timestamp) * 1000);
-                    labels.push(time.toLocaleTimeString());
-                    tempData.push(entry.temp);
-                    humData.push(entry.hum);
-                    fanData.push(entry.fan_speed);
-                });
+          // Обробка даних
+          Object.entries(data).forEach(([timestamp, entry]) => {
+            const time = new Date(parseInt(timestamp) * 1000);
+            labels.push(time.toLocaleTimeString());
+            tempData.push(entry.temp);
+            humData.push(entry.hum);
+            fanData.push(entry.fan_speed);
+          });
 
-                // Оновлення графіка
-                sensorChart.data.labels = labels;
-                sensorChart.data.datasets[0].data = tempData;
-                sensorChart.data.datasets[1].data = humData;
-                sensorChart.data.datasets[2].data = fanData;
-                sensorChart.update();
-            }
-        });
+          // Оновлення графіка
+          sensorChart.data.labels = labels;
+          sensorChart.data.datasets[0].data = tempData;
+          sensorChart.data.datasets[1].data = humData;
+          sensorChart.data.datasets[2].data = fanData;
+          sensorChart.update();
+        }
+      });
     </script>
-</body>
+  </body>
 </html>
