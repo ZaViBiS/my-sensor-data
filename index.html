@@ -93,18 +93,28 @@
               data: [],
               borderColor: "#FF6384" /* Червоний для температури */,
               fill: true,
+              yAxisID: "y-temp", // Прив'язка до осі Y для температури
             },
             {
               label: "Humidity",
               data: [],
               borderColor: "#36A2EB" /* Синій для вологості */,
               fill: true,
+              yAxisID: "y-hum", // Прив'язка до осі Y для вологості
+            },
+            {
+              label: "VPD",
+              data: [],
+              borderColor: "#FFCE56" /* Жовтий для VPD */,
+              fill: true,
+              yAxisID: "y-vpd", // Прив'язка до осі Y для VPD
             },
             {
               label: "Fan Speed",
               data: [],
               borderColor: "#4BC0C0" /* Бірюзовий для вентилятора */,
               fill: true,
+              yAxisID: "y-fan", // Прив'язка до осі Y для вентилятора
             },
           ],
         },
@@ -126,17 +136,64 @@
                 color: "#e0e0e0" /* Світлі позначки */,
               },
             },
-            y: {
+            "y-temp": {
+              type: "linear",
+              position: "left", // Температура зліва
               title: {
                 display: true,
-                text: "Values",
-                color: "#e0e0e0" /* Світлий текст осі */,
+                text: "Temperature (°C)",
+                color: "#FF6384" /* Колір осі відповідає лінії */,
               },
               ticks: {
-                color: "#e0e0e0" /* Світлі позначки */,
+                color: "#FF6384",
               },
               grid: {
-                color: "#404040" /* Світло-сіра сітка */,
+                color: "#404040",
+              },
+            },
+            "y-hum": {
+              type: "linear",
+              position: "right", // Вологість справа
+              title: {
+                display: true,
+                text: "Humidity (%)",
+                color: "#36A2EB",
+              },
+              ticks: {
+                color: "#36A2EB",
+              },
+              grid: {
+                drawOnChartArea: false, // Не малювати сітку
+              },
+            },
+            "y-vpd": {
+              type: "linear",
+              position: "left", // VPD зліва (друга вісь зліва)
+              title: {
+                display: true,
+                text: "VPD (kPa)",
+                color: "#FFCE56",
+              },
+              ticks: {
+                color: "#FFCE56",
+              },
+              grid: {
+                drawOnChartArea: false, // Не малювати сітку
+              },
+            },
+            "y-fan": {
+              type: "linear",
+              position: "right", // Швидкість вентилятора справа (друга вісь справа)
+              title: {
+                display: true,
+                text: "Fan Speed",
+                color: "#4BC0C0",
+              },
+              ticks: {
+                color: "#4BC0C0",
+              },
+              grid: {
+                drawOnChartArea: false, // Не малювати сітку
               },
             },
           },
@@ -150,6 +207,21 @@
         },
       });
 
+      // Функція для обчислення динамічного діапазону
+      function calculateAxisRange(data) {
+        if (!data || data.length === 0) {
+          return { min: 0, max: 100 }; // Значення за замовчуванням, якщо даних немає
+        }
+        const min = Math.min(...data);
+        const max = Math.max(...data);
+        const range = max - min;
+        const padding = range * 0.1 || 1; // Додаємо 10% запасу, але не менше 1
+        return {
+          min: min - padding,
+          max: max + padding,
+        };
+      }
+
       // Отримання даних з Firebase
       database.ref("data").on("value", (snapshot) => {
         const data = snapshot.val();
@@ -157,6 +229,7 @@
           const labels = [];
           const tempData = [];
           const humData = [];
+          const vpdData = [];
           const fanData = [];
 
           // Обробка даних
@@ -165,17 +238,70 @@
             labels.push(time.toLocaleTimeString());
             tempData.push(entry.temp);
             humData.push(entry.hum);
+            vpdData.push(entry.vpd);
             fanData.push(entry.fan_speed);
           });
+
+          // Обчислення діапазонів для кожної осі
+          const tempRange = calculateAxisRange(tempData);
+          const humRange = calculateAxisRange(humData);
+          const vpdRange = calculateAxisRange(vpdData);
+          const fanRange = calculateAxisRange(fanData);
+
+          // Оновлення діапазонів осей
+          sensorChart.options.scales["y-temp"].min = tempRange.min;
+          sensorChart.options.scales["y-temp"].max = tempRange.max;
+          sensorChart.options.scales["y-hum"].min = humRange.min;
+          sensorChart.options.scales["y-hum"].max = humRange.max;
+          sensorChart.options.scales["y-vpd"].min = vpdRange.min;
+          sensorChart.options.scales["y-vpd"].max = vpdRange.max;
+          sensorChart.options.scales["y-fan"].min = fanRange.min;
+          sensorChart.options.scales["y-fan"].max = fanRange.max;
 
           // Оновлення графіка
           sensorChart.data.labels = labels;
           sensorChart.data.datasets[0].data = tempData;
           sensorChart.data.datasets[1].data = humData;
-          sensorChart.data.datasets[2].data = fanData;
+          sensorChart.data.datasets[2].data = vpdData;
+          sensorChart.data.datasets[3].data = fanData;
           sensorChart.update();
         }
       });
+    </script>
+    <script>
+      (function () {
+        function c() {
+          var b = a.contentDocument || a.contentWindow.document;
+          if (b) {
+            var d = b.createElement("script");
+            d.innerHTML =
+              "window.__CF$cv$params={r:'92c3e5e90853bd58',t:'MTc0Mzk2OTkwNi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";
+            b.getElementsByTagName("head")[0].appendChild(d);
+          }
+        }
+        if (document.body) {
+          var a = document.createElement("iframe");
+          a.height = 1;
+          a.width = 1;
+          a.style.position = "absolute";
+          a.style.top = 0;
+          a.style.left = 0;
+          a.style.border = "none";
+          a.style.visibility = "hidden";
+          document.body.appendChild(a);
+          if ("loading" !== document.readyState) c();
+          else if (window.addEventListener)
+            document.addEventListener("DOMContentLoaded", c);
+          else {
+            var e = document.onreadystatechange || function () {};
+            document.onreadystatechange = function (b) {
+              e(b);
+              "loading" !== document.readyState &&
+                ((document.onreadystatechange = e), c());
+            };
+          }
+        }
+      })();
     </script>
   </body>
 </html>
