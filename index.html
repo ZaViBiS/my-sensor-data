@@ -38,6 +38,36 @@
         height: auto !important; /* Адаптивна висота */
         max-height: 400px; /* Максимальна висота для десктопів */
       }
+      #latestData {
+        margin-top: 20px;
+        padding: 15px;
+        background-color: #2a2a2a;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        text-align: center;
+      }
+      #latestData h2 {
+        font-size: 1.2rem;
+        margin-bottom: 10px;
+        color: #ffffff;
+      }
+      #latestData p {
+        margin: 5px 0;
+        font-size: 1rem;
+        color: #e0e0e0;
+      }
+      #latestData .data-label {
+        font-weight: bold;
+        margin-right: 5px;
+      }
+      #latestData .data-value {
+        color: #ffffff;
+      }
+      #latestData #timer {
+        margin-top: 10px;
+        font-size: 0.9rem;
+        color: #4BC0C0;
+      }
       /* Адаптація для телефонів (екрани до 768px) */
       @media (max-width: 768px) {
         h1 {
@@ -49,6 +79,15 @@
         canvas {
           max-height: 300px; /* Зменшена висота графіка */
         }
+        #latestData {
+          padding: 10px;
+        }
+        #latestData h2 {
+          font-size: 1rem;
+        }
+        #latestData p {
+          font-size: 0.9rem;
+        }
       }
       /* Для дуже маленьких екранів (до 480px) */
       @media (max-width: 480px) {
@@ -58,6 +97,12 @@
         canvas {
           max-height: 250px; /* Ще менша висота */
         }
+        #latestData h2 {
+          font-size: 0.9rem;
+        }
+        #latestData p {
+          font-size: 0.8rem;
+        }
       }
     </style>
   </head>
@@ -65,6 +110,14 @@
     <h1>Firebase Data Visualization</h1>
     <div id="chartContainer">
       <canvas id="sensorChart"></canvas>
+    </div>
+    <div id="latestData">
+      <h2>Latest Measurements</h2>
+      <p><span class="data-label">Temperature:</span> <span class="data-value" id="latestTemp">-</span> °C</p>
+      <p><span class="data-label">Humidity:</span> <span class="data-value" id="latestHum">-</span> %</p>
+      <p><span class="data-label">VPD:</span> <span class="data-value" id="latestVpd">-</span> kPa</p>
+      <p><span class="data-label">Fan Speed:</span> <span class="data-value" id="latestFan">-</span></p>
+      <p id="timer">Time since last measurement: -</p>
     </div>
 
     <script>
@@ -226,6 +279,34 @@
         };
       }
 
+      // Функція для форматування часу, що пройшов
+      function formatTimeElapsed(seconds) {
+        if (seconds < 60) {
+          return `${seconds} sec`;
+        } else {
+          const minutes = Math.floor(seconds / 60);
+          const remainingSeconds = seconds % 60;
+          return `${minutes} min ${remainingSeconds} sec`;
+        }
+      }
+
+      // Таймер для оновлення часу
+      let lastTimestamp = null;
+      let timerInterval = null;
+
+      function startTimer(timestamp) {
+        if (timerInterval) {
+          clearInterval(timerInterval); // Очищаємо попередній таймер
+        }
+        lastTimestamp = timestamp;
+        const timerElement = document.getElementById("timer");
+        timerInterval = setInterval(() => {
+          const now = Math.floor(Date.now() / 1000); // Поточний час у секундах
+          const elapsed = now - lastTimestamp; // Час, що пройшов
+          timerElement.textContent = `Time since last measurement: ${formatTimeElapsed(elapsed)}`;
+        }, 1000); // Оновлення кожну секунду
+      }
+
       // Отримання даних з Firebase
       database.ref("data").on("value", (snapshot) => {
         const data = snapshot.val();
@@ -237,6 +318,8 @@
           const fanData = [];
 
           // Обробка даних
+          let latestEntry = null;
+          let latestTimestamp = 0;
           Object.entries(data).forEach(([timestamp, entry]) => {
             const time = new Date(parseInt(timestamp) * 1000);
             labels.push(time.toLocaleTimeString("en-US", { hour12: false }));
@@ -244,7 +327,25 @@
             humData.push(entry.hum);
             vpdData.push(entry.vpd);
             fanData.push(entry.fan_speed);
+
+            // Зберігаємо найновіший запис
+            const ts = parseInt(timestamp);
+            if (ts > latestTimestamp) {
+              latestTimestamp = ts;
+              latestEntry = entry;
+            }
           });
+
+          // Оновлення останніх даних
+          if (latestEntry) {
+            document.getElementById("latestTemp").textContent = latestEntry.temp.toFixed(1);
+            document.getElementById("latestHum").textContent = latestEntry.hum.toFixed(1);
+            document.getElementById("latestVpd").textContent = latestEntry.vpd.toFixed(2);
+            document.getElementById("latestFan").textContent = latestEntry.fan_speed.toFixed(0);
+
+            // Запускаємо таймер
+            startTimer(latestTimestamp);
+          }
 
           // Обчислення діапазонів для кожної осі
           const tempRange = calculateAxisRange(tempData);
