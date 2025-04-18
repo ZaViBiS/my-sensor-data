@@ -239,7 +239,7 @@
           // Обробка даних
           Object.entries(data).forEach(([timestamp, entry]) => {
             const time = new Date(parseInt(timestamp) * 1000);
-            labels.push(time.toLocaleTimeString());
+            labels.push(time.toLocaleTimeString("en-US", { hour12: false }));
             tempData.push(entry.temp);
             humData.push(entry.hum);
             vpdData.push(entry.vpd);
