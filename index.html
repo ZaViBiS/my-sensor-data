@@ -1,12 +1,49 @@
-<!doctype html>
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Firebase Data Visualization</title>
+    <title>JSON Data Visualization</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     <style>
       body {
         font-family: Arial, sans-serif;
@@ -38,35 +75,12 @@
         height: auto !important; /* Адаптивна висота */
         max-height: 400px; /* Максимальна висота для десктопів */
       }
-      #latestData {
-        margin-top: 20px;
-        padding: 15px;
-        background-color: #2a2a2a;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+      #errorMessage {
+        display: none;
+        color: #ff6384;
         text-align: center;
-      }
-      #latestData h2 {
-        font-size: 1.2rem;
-        margin-bottom: 10px;
-        color: #ffffff;
-      }
-      #latestData p {
-        margin: 5px 0;
-        font-size: 1rem;
-        color: #e0e0e0;
-      }
-      #latestData .data-label {
-        font-weight: bold;
-        margin-right: 5px;
-      }
-      #latestData .data-value {
-        color: #ffffff;
-      }
-      #latestData #timer {
         margin-top: 10px;
-        font-size: 0.9rem;
-        color: #4BC0C0;
+        font-size: 1rem;
       }
       /* Адаптація для телефонів (екрани до 768px) */
       @media (max-width: 768px) {
@@ -79,15 +93,6 @@
         canvas {
           max-height: 300px; /* Зменшена висота графіка */
         }
-        #latestData {
-          padding: 10px;
-        }
-        #latestData h2 {
-          font-size: 1rem;
-        }
-        #latestData p {
-          font-size: 0.9rem;
-        }
       }
       /* Для дуже маленьких екранів (до 480px) */
       @media (max-width: 480px) {
@@ -97,43 +102,17 @@
         canvas {
           max-height: 250px; /* Ще менша висота */
         }
-        #latestData h2 {
-          font-size: 0.9rem;
-        }
-        #latestData p {
-          font-size: 0.8rem;
-        }
       }
     </style>
   </head>
   <body>
-    <h1>Firebase Data Visualization</h1>
+    <h1>JSON Data Visualization</h1>
     <div id="chartContainer">
       <canvas id="sensorChart"></canvas>
     </div>
-    <div id="latestData">
-      <h2>Latest Measurements</h2>
-      <p><span class="data-label">Temperature:</span> <span class="data-value" id="latestTemp">-</span> °C</p>
-      <p><span class="data-label">Humidity:</span> <span class="data-value" id="latestHum">-</span> %</p>
-      <p><span class="data-label">VPD:</span> <span class="data-value" id="latestVpd">-</span> kPa</p>
-      <p><span class="data-label">Fan Speed:</span> <span class="data-value" id="latestFan">-</span></p>
-      <p id="timer">Time since last measurement: -</p>
-    </div>
+    <div id="errorMessage"></div>
 
     <script>
-      // Налаштування Firebase
-      const firebaseConfig = {
-        authDomain: "grow-192db.firebaseapp.com",
-        databaseURL:
-          "https://grow-192db-default-rtdb.europe-west1.firebasedatabase.app/",
-        projectId: "grow-192db",
-        storageBucket: "grow-192db.appspot.com",
-      };
-
-      // Ініціалізація Firebase
-      firebase.initializeApp(firebaseConfig);
-      const database = firebase.database();
-
       // Налаштування графіка
       const ctx = document.getElementById("sensorChart").getContext("2d");
       const sensorChart = new Chart(ctx, {
@@ -146,32 +125,32 @@
               data: [],
               borderColor: "#FF6384" /* Червоний для температури */,
               fill: true,
-              yAxisID: "y-temp", // Прив'язка до осі Y для температури
-              pointRadius: 0, // Прибираємо точки
+              yAxisID: "y-temp",
+              pointRadius: 0,
             },
             {
               label: "Humidity",
               data: [],
               borderColor: "#36A2EB" /* Синій для вологості */,
               fill: true,
-              yAxisID: "y-hum", // Прив'язка до осі Y для вологості
-              pointRadius: 0, // Прибираємо точки
+              yAxisID: "y-hum",
+              pointRadius: 0,
             },
             {
               label: "VPD",
               data: [],
               borderColor: "#FFCE56" /* Жовтий для VPD */,
               fill: true,
-              yAxisID: "y-vpd", // Прив'язка до осі Y для VPD
-              pointRadius: 0, // Прибираємо точки
+              yAxisID: "y-vpd",
+              pointRadius: 0,
             },
             {
               label: "Fan Speed",
               data: [],
               borderColor: "#4BC0C0" /* Бірюзовий для вентилятора */,
               fill: true,
-              yAxisID: "y-fan", // Прив'язка до осі Y для вентилятора
-              pointRadius: 0, // Прибираємо точки
+              yAxisID: "y-fan",
+              pointRadius: 0,
             },
           ],
         },
@@ -179,27 +158,27 @@
           responsive: true,
           maintainAspectRatio: false,
           interaction: {
-            mode: "index", // Показувати всі значення для певного X
-            intersect: false, // Показувати навіть якщо курсор не точно над точкою
+            mode: "index",
+            intersect: false,
           },
           scales: {
             x: {
               title: {
                 display: true,
                 text: "Time",
-                color: "#e0e0e0" /* Світлий текст осі */,
+                color: "#e0e0e0",
               },
               ticks: {
-                color: "#e0e0e0" /* Світлі позначки */,
+                color: "#e0e0e0",
               },
             },
             "y-temp": {
               type: "linear",
-              position: "left", // Температура зліва
+              position: "left",
               title: {
                 display: true,
                 text: "Temperature (°C)",
-                color: "#FF6384" /* Колір осі відповідає лінії */,
+                color: "#FF6384",
               },
               ticks: {
                 color: "#FF6384",
@@ -210,7 +189,7 @@
             },
             "y-hum": {
               type: "linear",
-              position: "right", // Вологість справа
+              position: "right",
               title: {
                 display: true,
                 text: "Humidity (%)",
@@ -220,12 +199,12 @@
                 color: "#36A2EB",
               },
               grid: {
-                drawOnChartArea: false, // Не малювати сітку
+                drawOnChartArea: false,
               },
             },
             "y-vpd": {
               type: "linear",
-              position: "left", // VPD зліва (друга вісь зліва)
+              position: "left",
               title: {
                 display: true,
                 text: "VPD (kPa)",
@@ -235,12 +214,12 @@
                 color: "#FFCE56",
               },
               grid: {
-                drawOnChartArea: false, // Не малювати сітку
+                drawOnChartArea: false,
               },
             },
             "y-fan": {
               type: "linear",
-              position: "right", // Швидкість вентилятора справа (друга вісь справа)
+              position: "right",
               title: {
                 display: true,
                 text: "Fan Speed",
@@ -250,14 +229,14 @@
                 color: "#4BC0C0",
               },
               grid: {
-                drawOnChartArea: false, // Не малювати сітку
+                drawOnChartArea: false,
               },
             },
           },
           plugins: {
             legend: {
               labels: {
-                color: "#e0e0e0" /* Світлий текст легенди */,
+                color: "#e0e0e0",
               },
             },
           },
@@ -267,50 +246,51 @@
       // Функція для обчислення динамічного діапазону
       function calculateAxisRange(data) {
         if (!data || data.length === 0) {
-          return { min: 0, max: 100 }; // Значення за замовчуванням, якщо даних немає
+          return { min: 0, max: 100 };
         }
         const min = Math.min(...data);
         const max = Math.max(...data);
         const range = max - min;
-        const padding = range * 0.1 || 1; // Додаємо 10% запасу, але не менше 1
+        const padding = range * 0.1 || 1;
         return {
           min: min - padding,
           max: max + padding,
         };
       }
 
-      // Функція для форматування часу, що пройшов
-      function formatTimeElapsed(seconds) {
-        if (seconds < 60) {
-          return `${seconds} sec`;
-        } else {
-          const minutes = Math.floor(seconds / 60);
-          const remainingSeconds = seconds % 60;
-          return `${minutes} min ${remainingSeconds} sec`;
-        }
+      // Функція для відображення повідомлення про помилку
+      function showError(message) {
+        const errorDiv = document.getElementById("errorMessage");
+        errorDiv.textContent = message;
+        errorDiv.style.display = "block";
       }
 
-      // Таймер для оновлення часу
-      let lastTimestamp = null;
-      let timerInterval = null;
-
-      function startTimer(timestamp) {
-        if (timerInterval) {
-          clearInterval(timerInterval); // Очищаємо попередній таймер
-        }
-        lastTimestamp = timestamp;
-        const timerElement = document.getElementById("timer");
-        timerInterval = setInterval(() => {
-          const now = Math.floor(Date.now() / 1000); // Поточний час у секундах
-          const elapsed = now - lastTimestamp; // Час, що пройшов
-          timerElement.textContent = `Time since last measurement: ${formatTimeElapsed(elapsed)}`;
-        }, 1000); // Оновлення кожну секунду
+      // Функція для приховання повідомлення про помилку
+      function hideError() {
+        const errorDiv = document.getElementById("errorMessage");
+        errorDiv.textContent = "";
+        errorDiv.style.display = "none";
       }
 
-      // Отримання даних з Firebase
-      database.ref("data").on("value", (snapshot) => {
-        const data = snapshot.val();
-        if (data) {
+      // Отримання даних з data.ygryk.de
+      async function fetchData() {
+        try {
+          const response = await fetch("https://data.ygryk.de", {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+          }
+
+          const data = await response.json();
+          if (!data || Object.keys(data).length === 0) {
+            throw new Error("No data received from server");
+          }
+
           const labels = [];
           const tempData = [];
           const humData = [];
@@ -318,40 +298,28 @@
           const fanData = [];
 
           // Обробка даних
-          let latestEntry = null;
-          let latestTimestamp = 0;
           Object.entries(data).forEach(([timestamp, entry]) => {
-            const time = new Date(parseInt(timestamp) * 1000);
-            labels.push(time.toLocaleTimeString("en-US", { hour12: false }));
-            tempData.push(entry.temp);
-            humData.push(entry.hum);
-            vpdData.push(entry.vpd);
-            fanData.push(entry.fan_speed);
-
-            // Зберігаємо найновіший запис
-            const ts = parseInt(timestamp);
-            if (ts > latestTimestamp) {
-              latestTimestamp = ts;
-              latestEntry = entry;
+            if (!entry || typeof entry !== "object") {
+              console.warn(`Invalid entry at timestamp ${timestamp}`);
+              return;
             }
+            const time = new Date(parseInt(timestamp) * 1000);
+            labels.push(time.toLocaleTimeString());
+            tempData.push(entry.temp ?? null);
+            humData.push(entry.hum ?? null);
+            vpdData.push(entry.vpd ?? null);
+            fanData.push(entry.fan_speed ?? null);
           });
 
-          // Оновлення останніх даних
-          if (latestEntry) {
-            document.getElementById("latestTemp").textContent = latestEntry.temp.toFixed(1);
-            document.getElementById("latestHum").textContent = latestEntry.hum.toFixed(1);
-            document.getElementById("latestVpd").textContent = latestEntry.vpd.toFixed(2);
-            document.getElementById("latestFan").textContent = latestEntry.fan_speed.toFixed(0);
-
-            // Запускаємо таймер
-            startTimer(latestTimestamp);
+          if (labels.length === 0) {
+            throw new Error("No valid data entries found");
           }
 
           // Обчислення діапазонів для кожної осі
-          const tempRange = calculateAxisRange(tempData);
-          const humRange = calculateAxisRange(humData);
-          const vpdRange = calculateAxisRange(vpdData);
-          const fanRange = calculateAxisRange(fanData);
+          const tempRange = calculateAxisRange(tempData.filter((v) => v !== null));
+          const humRange = calculateAxisRange(humData.filter((v) => v !== null));
+          const vpdRange = calculateAxisRange(vpdData.filter((v) => v !== null));
+          const fanRange = calculateAxisRange(fanData.filter((v) => v !== null));
 
           // Оновлення діапазонів осей
           sensorChart.options.scales["y-temp"].min = tempRange.min;
@@ -370,43 +338,19 @@
           sensorChart.data.datasets[2].data = vpdData;
           sensorChart.data.datasets[3].data = fanData;
           sensorChart.update();
+
+          hideError();
+        } catch (error) {
+          console.error("Error fetching data:", error.message);
+          showError("Failed to load data. Please try again later.");
         }
-      });
-    </script>
-    <script>
-      (function () {
-        function c() {
-          var b = a.contentDocument || a.contentWindow.document;
-          if (b) {
-            var d = b.createElement("script");
-            d.innerHTML =
-              "window.__CF$cv$params={r:'92c3e5e90853bd58',t:'MTc0Mzk2OTkwNi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";
-            b.getElementsByTagName("head")[0].appendChild(d);
-          }
-        }
-        if (document.body) {
-          var a = document.createElement("iframe");
-          a.height = 1;
-          a.width = 1;
-          a.style.position = "absolute";
-          a.style.top = 0;
-          a.style.left = 0;
-          a.style.border = "none";
-          a.style.visibility = "hidden";
-          document.body.appendChild(a);
-          if ("loading" !== document.readyState) c();
-          else if (window.addEventListener)
-            document.addEventListener("DOMContentLoaded", c);
-          else {
-            var e = document.onreadystatechange || function () {};
-            document.onreadystatechange = function (b) {
-              e(b);
-              "loading" !== document.readyState &&
-                ((document.onreadystatechange = e), c());
-            };
-          }
-        }
-      })();
+      }
+
+      // Виклик функції для отримання даних при завантаженні сторінки
+      fetchData();
+
+      // Оновлення даних кожні 60 секунд
+      setInterval(fetchData, 60000);
     </script>
   </body>
 </html>
