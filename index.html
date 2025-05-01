@@ -2,32 +2,19 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>JSON Data Visualization</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Sensor Data Viewer</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
       body {
         font-family: Arial, sans-serif;
-        margin: 0;
-        padding: 20px;
         background-color: #1a1a1a;
         color: #e0e0e0;
-        box-sizing: border-box;
-      }
-      h1 {
-        font-size: 1.5rem;
-        text-align: center;
-        margin-bottom: 20px;
-        color: #ffffff;
+        padding: 20px;
       }
       #chartContainer {
-        width: 100%;
-        margin: 0 auto;
-        padding: 0;
-        position: relative;
-        max-width: 100%;
-        overflow-x: auto;
         background-color: #2a2a2a;
+        padding: 20px;
         border-radius: 8px;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
       }
@@ -36,113 +23,36 @@
         height: auto !important;
         max-height: 400px;
       }
-      #errorMessage {
-        display: none;
-        color: #ff6384;
-        text-align: center;
-        margin-top: 10px;
-        font-size: 1rem;
-      }
       #latestData {
         margin-top: 20px;
         padding: 15px;
         background-color: #2a2a2a;
         border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
         text-align: center;
       }
-      #latestData p {
-        margin: 5px 0;
-        font-size: 1rem;
-      }
-      #latestData .label {
+      .label {
         font-weight: bold;
-        color: #ffffff;
+        color: #fff;
       }
-      #latestData .value {
-        margin-left: 10px;
-      }
-      #latestData .temp { color: #FF6384; }
-      #latestData .hum { color: #36A2EB; }
-      #latestData .vpd { color: #FFCE56; }
-      #latestData .fan { color: #4BC0C0; }
-      #latestData .time { color: #e0e0e0; }
-      @media (max-width: 768px) {
-        h1 {
-          font-size: 1.2rem;
-        }
-        #chartContainer {
-          padding: 0 5px;
-        }
-        canvas {
-          max-height: 300px;
-        }
-        #latestData {
-          padding: 10px;
-        }
-        #latestData p {
-          font-size: 0.9rem;
-        }
-      }
-      @media (max-width: 480px) {
-        h1 {
-          font-size: 1rem;
-        }
-        canvas {
-          max-height: 250px;
-        }
-        #latestData p {
-          font-size: 0.8rem;
-        }
-      }
+      .temp { color: #FF6384; }
+      .hum { color: #36A2EB; }
+      .vpd { color: #FFCE56; }
+      .fan { color: #4BC0C0; }
+      .time { color: #e0e0e0; }
     </style>
   </head>
   <body>
-    <h1>JSON Data Visualization</h1>
+    <h1 style="text-align:center;">Sensor Data Viewer</h1>
     <div id="chartContainer">
       <canvas id="sensorChart"></canvas>
     </div>
-    <div id="errorMessage"></div>
     <div id="latestData">
-      <p><span class="label">Latest Temperature:</span><span class="value temp" id="latestTemp">--</span></p>
-      <p><span class="label">Latest Humidity:</span><span class="value hum" id="latestHum">--</span></p>
-      <p><span class="label">Latest VPD:</span><span class="value vpd" id="latestVpd">--</span></p>
-      <p><span class="label">Latest Fan Speed:</span><span class="value fan" id="latestFan">--</span></p>
-      <p><span class="label">Time Since Last Update:</span><span class="value time" id="timeSince">--</span></p>
+      <p><span class="label">Latest Temperature:</span> <span class="temp" id="latestTemp">--</span></p>
+      <p><span class="label">Latest Humidity:</span> <span class="hum" id="latestHum">--</span></p>
+      <p><span class="label">Latest VPD:</span> <span class="vpd" id="latestVpd">--</span></p>
+      <p><span class="label">Latest Fan Speed:</span> <span class="fan" id="latestFan">--</span></p>
+      <p><span class="label">Time Since Last Update:</span> <span class="time" id="timeSince">--</span></p>
     </div>
-
-    <script type="text/javascript">
-      var gk_isXlsx = false;
-      var gk_xlsxFileLookup = {};
-      var gk_fileData = {};
-      function filledCell(cell) {
-        return cell !== '' && cell != null;
-      }
-      function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-          try {
-            var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-            var firstSheetName = workbook.SheetNames[0];
-            var worksheet = workbook.Sheets[firstSheetName];
-            var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-            var filteredData = jsonData.filter(row => row.some(filledCell));
-            var headerRowIndex = filteredData.findIndex((row, index) =>
-              row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-            );
-            if (headerRowIndex === -1 || headerRowIndex > 25) {
-              headerRowIndex = 0;
-            }
-            var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex));
-            csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-            return csv;
-          } catch (e) {
-            console.error(e);
-            return "";
-          }
-        }
-        return gk_fileData[filename] || "";
-      }
-    </script>
 
     <script>
       const ctx = document.getElementById("sensorChart").getContext("2d");
@@ -152,275 +62,146 @@
           labels: [],
           datasets: [
             {
-              label: "Temperature",
+              label: "Temperature (°C)",
               data: [],
               borderColor: "#FF6384",
-              fill: true,
               yAxisID: "y-temp",
+              fill: false,
               pointRadius: 0,
             },
             {
-              label: "Humidity",
+              label: "Humidity (%)",
               data: [],
               borderColor: "#36A2EB",
-              fill: true,
               yAxisID: "y-hum",
+              fill: false,
               pointRadius: 0,
             },
             {
-              label: "VPD",
+              label: "VPD (kPa)",
               data: [],
               borderColor: "#FFCE56",
-              fill: true,
               yAxisID: "y-vpd",
+              fill: false,
               pointRadius: 0,
             },
             {
               label: "Fan Speed",
               data: [],
               borderColor: "#4BC0C0",
-              fill: true,
               yAxisID: "y-fan",
+              fill: false,
               pointRadius: 0,
             },
-          ],
+          ]
         },
         options: {
           responsive: true,
-          maintainAspectRatio: false,
           interaction: {
             mode: "index",
             intersect: false,
           },
           scales: {
             x: {
+              ticks: { color: "#e0e0e0" },
               title: {
                 display: true,
                 text: "Time",
-                color: "#e0e0e0",
-              },
-              ticks: {
-                color: "#e0e0e0",
-              },
+                color: "#e0e0e0"
+              }
             },
             "y-temp": {
               type: "linear",
               position: "left",
               title: {
                 display: true,
-                text: "Temperature (°C)",
-                color: "#FF6384",
+                text: "Temperature",
+                color: "#FF6384"
               },
-              ticks: {
-                color: "#FF6384",
-              },
-              grid: {
-                color: "#404040",
-              },
+              ticks: { color: "#FF6384" }
             },
             "y-hum": {
               type: "linear",
               position: "right",
               title: {
                 display: true,
-                text: "Humidity (%)",
-                color: "#36A2EB",
+                text: "Humidity",
+                color: "#36A2EB"
               },
-              ticks: {
-                color: "#36A2EB",
-              },
-              grid: {
-                drawOnChartArea: false,
-              },
+              ticks: { color: "#36A2EB" }
             },
             "y-vpd": {
               type: "linear",
               position: "left",
               title: {
                 display: true,
-                text: "VPD (kPa)",
-                color: "#FFCE56",
+                text: "VPD",
+                color: "#FFCE56"
               },
-              ticks: {
-                color: "#FFCE56",
-              },
-              grid: {
-                drawOnChartArea: false,
-              },
+              ticks: { color: "#FFCE56" }
             },
             "y-fan": {
               type: "linear",
               position: "right",
               title: {
                 display: true,
-                text: "Fan Speed",
-                color: "#4BC0C0",
+                text: "Fan",
+                color: "#4BC0C0"
               },
-              ticks: {
-                color: "#4BC0C0",
-              },
-              grid: {
-                drawOnChartArea: false,
-              },
+              ticks: { color: "#4BC0C0" }
             },
           },
           plugins: {
             legend: {
               labels: {
-                color: "#e0e0e0",
-              },
-            },
-          },
-        },
+                color: "#e0e0e0"
+              }
+            }
+          }
+        }
       });
 
-      function calculateAxisRange(data) {
-        if (!data || data.length === 0) {
-          return { min: 0, max: 100 };
-        }
-        const min = Math.min(...data);
-        const max = Math.max(...data);
-        const range = max - min;
-        const padding = range * 0.1 || 1;
-        return {
-          min: min - padding,
-          max: max + padding,
-        };
-      }
-
-      function showError(message) {
-        const errorDiv = document.getElementById("errorMessage");
-        errorDiv.textContent = message;
-        errorDiv.style.display = "block";
-      }
-
-      function hideError() {
-        const errorDiv = document.getElementById("errorMessage");
-        errorDiv.textContent = "";
-        errorDiv.style.display = "none";
-      }
-
-      // Function to format time elapsed
-      function formatTimeElapsed(timestamp) {
-  if (!timestamp) return '--';
-
-  let timestampMs = parseInt(timestamp);
-
-  // Якщо менше ніж 1 трильйон — це секунди, множимо на 1000
-  if (timestampMs < 1e12) {
-    timestampMs *= 1000;
-    console.log(`Timestamp interpreted as seconds, converted to ms: ${timestampMs}`);
-  } else {
-    console.log(`Timestamp interpreted as milliseconds: ${timestampMs}`);
-  }
-
-  const now = Date.now();
-  const secondsAgo = Math.floor((now - timestampMs) / 1000);
-
-  if (isNaN(secondsAgo)) {
-    console.error(`Invalid timestamp: ${timestamp}`);
-    return 'Invalid timestamp';
-  }
-  if (secondsAgo < 0) {
-    return 'In the future';
-  }
-
-  if (secondsAgo < 60) return `${secondsAgo} second${secondsAgo === 1 ? '' : 's'} ago`;
-  const minutesAgo = Math.floor(secondsAgo / 60);
-  if (minutesAgo < 60) return `${minutesAgo} minute${minutesAgo === 1 ? '' : 's'} ago`;
-  const hoursAgo = Math.floor(minutesAgo / 60);
-  if (hoursAgo < 24) return `${hoursAgo} hour${hoursAgo === 1 ? '' : 's'} ago`;
-  const daysAgo = Math.floor(hoursAgo / 24);
-  return `${daysAgo} day${daysAgo === 1 ? '' : 's'} ago`;
-}
-
-
-      // Function to update latest data display
-      function updateLatestData(timestamp, temp, hum, vpd, fan) {
-        document.getElementById("latestTemp").textContent = temp !== null && temp !== undefined ? `${temp.toFixed(1)} °C` : '--';
-        document.getElementById("latestHum").textContent = hum !== null && hum !== undefined ? `${hum.toFixed(1)} %` : '--';
-        document.getElementById("latestVpd").textContent = vpd !== null && vpd !== undefined ? `${vpd.toFixed(2)} kPa` : '--';
-        document.getElementById("latestFan").textContent = fan !== null && fan !== undefined ? `${fan.toFixed(0)}` : '--';
-        document.getElementById("timeSince").textContent = formatTimeElapsed(timestamp);
+      function formatTimeElapsed(timestampSec) {
+        const timestampMs = parseInt(timestampSec) * 1000;
+        const now = Date.now();
+        const diffSeconds = Math.floor((now - timestampMs) / 1000);
+        if (diffSeconds < 0) return 'In the future';
+        if (diffSeconds < 60) return `${diffSeconds} sec ago`;
+        const minutes = Math.floor(diffSeconds / 60);
+        if (minutes < 60) return `${minutes} min ago`;
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) return `${hours} hr ago`;
+        const days = Math.floor(hours / 24);
+        return `${days} day${days === 1 ? '' : 's'} ago`;
       }
 
       async function fetchData() {
         try {
           const response = await fetch("https://data.ygryk.de", {
             method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
+            headers: { "Content-Type": "application/json" }
           });
 
-          if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-          }
-
-          const data = await response.json();
-          if (!data || Object.keys(data).length === 0) {
-            throw new Error("No data received from server");
-          }
-
-          // Log the raw data for debugging
-          console.log("Received data:", data);
+          const data = await response.json(); // <- should be array
+          if (!Array.isArray(data)) throw new Error("Expected array of entries");
 
           const labels = [];
           const tempData = [];
           const humData = [];
           const vpdData = [];
           const fanData = [];
-          let latestTimestamp = null;
-          let latestEntry = null;
 
-          // Process data
-          Object.entries(data).forEach(([timestamp, entry]) => {
-            if (!entry || typeof entry !== "object") {
-              console.warn(`Invalid entry at timestamp ${timestamp}`);
-              return;
-            }
-            const time = new Date(parseInt(timestamp) * (String(timestamp).length > 11 ? 1 : 1000));
-            labels.push(time.toLocaleTimeString());
+          data.sort((a, b) => a.time - b.time); // ensure chronological order
+          const latest = data[data.length - 1];
+
+          data.forEach(entry => {
+            const date = new Date(entry.time * 1000);
+            labels.push(date.toLocaleTimeString());
             tempData.push(entry.temp ?? null);
             humData.push(entry.hum ?? null);
             vpdData.push(entry.vpd ?? null);
             fanData.push(entry.fan_speed ?? null);
-            // Track the latest entry
-            if (!latestTimestamp || parseInt(timestamp) > parseInt(latestTimestamp)) {
-              latestTimestamp = timestamp;
-              latestEntry = entry;
-            }
           });
-
-          if (labels.length === 0) {
-            throw new Error("No valid data entries found");
-          }
-
-          // Update latest data display
-          if (latestTimestamp && latestEntry) {
-            console.log(`Latest timestamp: ${latestTimestamp}`);
-            updateLatestData(
-              latestTimestamp,
-              latestEntry.temp,
-              latestEntry.hum,
-              latestEntry.vpd,
-              latestEntry.fan_speed
-            );
-          }
-
-          const tempRange = calculateAxisRange(tempData.filter((v) => v !== null));
-          const humRange = calculateAxisRange(humData.filter((v) => v !== null));
-          const vpdRange = calculateAxisRange(vpdData.filter((v) => v !== null));
-          const fanRange = calculateAxisRange(fanData.filter((v) => v !== null));
-
-          sensorChart.options.scales["y-temp"].min = tempRange.min;
-          sensorChart.options.scales["y-temp"].max = tempRange.max;
-          sensorChart.options.scales["y-hum"].min = humRange.min;
-          sensorChart.options.scales["y-hum"].max = humRange.max;
-          sensorChart.options.scales["y-vpd"].min = vpdRange.min;
-          sensorChart.options.scales["y-vpd"].max = vpdRange.max;
-          sensorChart.options.scales["y-fan"].min = fanRange.min;
-          sensorChart.options.scales["y-fan"].max = fanRange.max;
 
           sensorChart.data.labels = labels;
           sensorChart.data.datasets[0].data = tempData;
@@ -429,11 +210,13 @@
           sensorChart.data.datasets[3].data = fanData;
           sensorChart.update();
 
-          hideError();
-        } catch (error) {
-          console.error("Error fetching data:", error.message);
-          showError("Failed to load data. Please try again later.");
-          updateLatestData(null, null, null, null, null); // Reset latest data on error
+          document.getElementById("latestTemp").textContent = latest.temp?.toFixed(1) + " °C" ?? "--";
+          document.getElementById("latestHum").textContent = latest.hum?.toFixed(1) + " %" ?? "--";
+          document.getElementById("latestVpd").textContent = latest.vpd?.toFixed(2) + " kPa" ?? "--";
+          document.getElementById("latestFan").textContent = latest.fan_speed?.toFixed(0) ?? "--";
+          document.getElementById("timeSince").textContent = formatTimeElapsed(latest.time);
+        } catch (err) {
+          console.error("Data error:", err);
         }
       }
 
