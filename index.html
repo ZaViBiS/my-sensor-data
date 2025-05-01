@@ -374,3 +374,51 @@
           });
 
           if (labels.length === 0) {
+            throw new Error("No valid data entries found");
+          }
+
+          // Update latest data display
+          if (latestTimestamp && latestEntry) {
+            updateLatestData(
+              latestTimestamp,
+              latestEntry.temp,
+              latestEntry.hum,
+              latestEntry.vpd,
+              latestEntry.fan_speed
+            );
+          }
+
+          const tempRange = calculateAxisRange(tempData.filter((v) => v !== null));
+          const humRange = calculateAxisRange(humData.filter((v) => v !== null));
+          const vpdRange = calculateAxisRange(vpdData.filter((v) => v !== null));
+          const fanRange = calculateAxisRange(fanData.filter((v) => v !== null));
+
+          sensorChart.options.scales["y-temp"].min = tempRange.min;
+          sensorChart.options.scales["y-temp"].max = tempRange.max;
+          sensorChart.options.scales["y-hum"].min = humRange.min;
+          sensorChart.options.scales["y-hum"].max = humRange.max;
+          sensorChart.options.scales["y-vpd"].min = vpdRange.min;
+          sensorChart.options.scales["y-vpd"].max = vpdRange.max;
+          sensorChart.options.scales["y-fan"].min = fanRange.min;
+          sensorChart.options.scales["y-fan"].max = fanRange.max;
+
+          sensorChart.data.labels = labels;
+          sensorChart.data.datasets[0].data = tempData;
+          sensorChart.data.datasets[1].data = humData;
+          sensorChart.data.datasets[2].data = vpdData;
+          sensorChart.data.datasets[3].data = fanData;
+          sensorChart.update();
+
+          hideError();
+        } catch (error) {
+          console.error("Error fetching data:", error.message);
+          showError("Failed to load data. Please try again later.");
+          updateLatestData(null, null, null, null, null); // Reset latest data on error
+        }
+      }
+
+      fetchData();
+      setInterval(fetchData, 20000);
+    </script>
+  </body>
+</html>
