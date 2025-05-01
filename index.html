@@ -303,12 +303,23 @@
       // Function to format time elapsed
       function formatTimeElapsed(timestamp) {
         if (!timestamp) return '--';
-        // Convert timestamp to milliseconds (assuming timestamp is in seconds)
-        const timestampMs = parseInt(timestamp) * 1000;
+        let timestampMs = parseInt(timestamp);
+        // Detect if timestamp is in seconds (10 digits) or milliseconds (13 digits)
+        if (String(timestamp).length > 11) {
+          // Likely milliseconds
+          console.log(`Timestamp interpreted as milliseconds: ${timestampMs}`);
+        } else {
+          // Likely seconds
+          timestampMs *= 1000;
+          console.log(`Timestamp interpreted as seconds, converted to ms: ${timestampMs}`);
+        }
         const now = Date.now();
         const secondsAgo = Math.floor((now - timestampMs) / 1000);
         
-        if (isNaN(secondsAgo) || secondsAgo < 0) return 'Invalid timestamp';
+        if (isNaN(secondsAgo) || secondsAgo < 0) {
+          console.error(`Invalid timestamp calculation: timestamp=${timestamp}, secondsAgo=${secondsAgo}`);
+          return 'Invalid timestamp';
+        }
         
         if (secondsAgo < 60) return `${secondsAgo} second${secondsAgo === 1 ? '' : 's'} ago`;
         const minutesAgo = Math.floor(secondsAgo / 60);
@@ -346,6 +357,9 @@
             throw new Error("No data received from server");
           }
 
+          // Log the raw data for debugging
+          console.log("Received data:", data);
+
           const labels = [];
           const tempData = [];
           const humData = [];
@@ -360,7 +374,7 @@
               console.warn(`Invalid entry at timestamp ${timestamp}`);
               return;
             }
-            const time = new Date(parseInt(timestamp) * 1000);
+            const time = new Date(parseInt(timestamp) * (String(timestamp).length > 11 ? 1 : 1000));
             labels.push(time.toLocaleTimeString());
             tempData.push(entry.temp ?? null);
             humData.push(entry.hum ?? null);
@@ -379,6 +393,7 @@
 
           // Update latest data display
           if (latestTimestamp && latestEntry) {
+            console.log(`Latest timestamp: ${latestTimestamp}`);
             updateLatestData(
               latestTimestamp,
               latestEntry.temp,
