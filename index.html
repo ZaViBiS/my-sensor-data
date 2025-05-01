@@ -302,33 +302,38 @@
 
       // Function to format time elapsed
       function formatTimeElapsed(timestamp) {
-        if (!timestamp) return '--';
-        let timestampMs = parseInt(timestamp);
-        // Detect if timestamp is in seconds (10 digits) or milliseconds (13 digits)
-        if (String(timestamp).length > 11) {
-          // Likely milliseconds
-          console.log(`Timestamp interpreted as milliseconds: ${timestampMs}`);
-        } else {
-          // Likely seconds
-          timestampMs *= 1000;
-          console.log(`Timestamp interpreted as seconds, converted to ms: ${timestampMs}`);
-        }
-        const now = Date.now();
-        const secondsAgo = Math.floor((now - timestampMs) / 1000);
-        
-        if (isNaN(secondsAgo) || secondsAgo < 0) {
-          console.error(`Invalid timestamp calculation: timestamp=${timestamp}, secondsAgo=${secondsAgo}`);
-          return 'Invalid timestamp';
-        }
-        
-        if (secondsAgo < 60) return `${secondsAgo} second${secondsAgo === 1 ? '' : 's'} ago`;
-        const minutesAgo = Math.floor(secondsAgo / 60);
-        if (minutesAgo < 60) return `${minutesAgo} minute${minutesAgo === 1 ? '' : 's'} ago`;
-        const hoursAgo = Math.floor(minutesAgo / 60);
-        if (hoursAgo < 24) return `${hoursAgo} hour${hoursAgo === 1 ? '' : 's'} ago`;
-        const daysAgo = Math.floor(hoursAgo / 24);
-        return `${daysAgo} day${daysAgo === 1 ? '' : 's'} ago`;
-      }
+  if (!timestamp) return '--';
+
+  let timestampMs = parseInt(timestamp);
+
+  // Якщо менше ніж 1 трильйон — це секунди, множимо на 1000
+  if (timestampMs < 1e12) {
+    timestampMs *= 1000;
+    console.log(`Timestamp interpreted as seconds, converted to ms: ${timestampMs}`);
+  } else {
+    console.log(`Timestamp interpreted as milliseconds: ${timestampMs}`);
+  }
+
+  const now = Date.now();
+  const secondsAgo = Math.floor((now - timestampMs) / 1000);
+
+  if (isNaN(secondsAgo)) {
+    console.error(`Invalid timestamp: ${timestamp}`);
+    return 'Invalid timestamp';
+  }
+  if (secondsAgo < 0) {
+    return 'In the future';
+  }
+
+  if (secondsAgo < 60) return `${secondsAgo} second${secondsAgo === 1 ? '' : 's'} ago`;
+  const minutesAgo = Math.floor(secondsAgo / 60);
+  if (minutesAgo < 60) return `${minutesAgo} minute${minutesAgo === 1 ? '' : 's'} ago`;
+  const hoursAgo = Math.floor(minutesAgo / 60);
+  if (hoursAgo < 24) return `${hoursAgo} hour${hoursAgo === 1 ? '' : 's'} ago`;
+  const daysAgo = Math.floor(hoursAgo / 24);
+  return `${daysAgo} day${daysAgo === 1 ? '' : 's'} ago`;
+}
+
 
       // Function to update latest data display
       function updateLatestData(timestamp, temp, hum, vpd, fan) {
