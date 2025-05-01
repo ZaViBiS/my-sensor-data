@@ -302,22 +302,30 @@
 
       // Function to format time elapsed
       function formatTimeElapsed(timestamp) {
-        const now = Date.now() / 1000;
-        const secondsAgo = Math.floor(now - parseInt(timestamp));
-        if (secondsAgo < 60) return `${secondsAgo} seconds ago`;
+        if (!timestamp) return '--';
+        // Convert timestamp to milliseconds (assuming timestamp is in seconds)
+        const timestampMs = parseInt(timestamp) * 1000;
+        const now = Date.now();
+        const secondsAgo = Math.floor((now - timestampMs) / 1000);
+        
+        if (isNaN(secondsAgo) || secondsAgo < 0) return 'Invalid timestamp';
+        
+        if (secondsAgo < 60) return `${secondsAgo} second${secondsAgo === 1 ? '' : 's'} ago`;
         const minutesAgo = Math.floor(secondsAgo / 60);
         if (minutesAgo < 60) return `${minutesAgo} minute${minutesAgo === 1 ? '' : 's'} ago`;
         const hoursAgo = Math.floor(minutesAgo / 60);
-        return `${hoursAgo} hour${hoursAgo === 1 ? '' : 's'} ago`;
+        if (hoursAgo < 24) return `${hoursAgo} hour${hoursAgo === 1 ? '' : 's'} ago`;
+        const daysAgo = Math.floor(hoursAgo / 24);
+        return `${daysAgo} day${daysAgo === 1 ? '' : 's'} ago`;
       }
 
       // Function to update latest data display
       function updateLatestData(timestamp, temp, hum, vpd, fan) {
-        document.getElementById("latestTemp").textContent = temp !== null ? `${temp.toFixed(1)} °C` : '--';
-        document.getElementById("latestHum").textContent = hum !== null ? `${hum.toFixed(1)} %` : '--';
-        document.getElementById("latestVpd").textContent = vpd !== null ? `${vpd.toFixed(2)} kPa` : '--';
-        document.getElementById("latestFan").textContent = fan !== null ? `${fan.toFixed(0)}` : '--';
-        document.getElementById("timeSince").textContent = timestamp ? formatTimeElapsed(timestamp) : '--';
+        document.getElementById("latestTemp").textContent = temp !== null && temp !== undefined ? `${temp.toFixed(1)} °C` : '--';
+        document.getElementById("latestHum").textContent = hum !== null && hum !== undefined ? `${hum.toFixed(1)} %` : '--';
+        document.getElementById("latestVpd").textContent = vpd !== null && vpd !== undefined ? `${vpd.toFixed(2)} kPa` : '--';
+        document.getElementById("latestFan").textContent = fan !== null && fan !== undefined ? `${fan.toFixed(0)}` : '--';
+        document.getElementById("timeSince").textContent = formatTimeElapsed(timestamp);
       }
 
       async function fetchData() {
@@ -366,50 +374,3 @@
           });
 
           if (labels.length === 0) {
-            throw new Error("No valid data entries found");
-          }
-
-          // Update latest data display
-          if (latestTimestamp && latestEntry) {
-            updateLatestData(
-              latestTimestamp,
-              latestEntry.temp,
-              latestEntry.hum,
-              latestEntry.vpd,
-              latestEntry.fan_speed
-            );
-          }
-
-          const tempRange = calculateAxisRange(tempData.filter((v) => v !== null));
-          const humRange = calculateAxisRange(humData.filter((v) => v !== null));
-          const vpdRange = calculateAxisRange(vpdData.filter((v) => v !== null));
-          const fanRange = calculateAxisRange(fanData.filter((v) => v !== null));
-
-          sensorChart.options.scales["y-temp"].min = tempRange.min;
-          sensorChart.options.scales["y-temp"].max = tempRange.max;
-          sensorChart.options.scales["y-hum"].min = humRange.min;
-          sensorChart.options.scales["y-hum"].max = humRange.max;
-          sensorChart.options.scales["y-vpd"].min = vpdRange.min;
-          sensorChart.options.scales["y-vpd"].max = vpdRange.max;
-          sensorChart.options.scales["y-fan"].min = fanRange.min;
-          sensorChart.options.scales["y-fan"].max = fanRange.max;
-
-          sensorChart.data.labels = labels;
-          sensorChart.data.datasets[0].data = tempData;
-          sensorChart.data.datasets[1].data = humData;
-          sensorChart.data.datasets[2].data = vpdData;
-          sensorChart.data.datasets[3].data = fanData;
-          sensorChart.update();
-
-          hideError();
-        } catch (error) {
-          console.error("Error fetching data:", error.message);
-          showError("Failed to load data. Please try again later.");
-        }
-      }
-
-      fetchData();
-      setInterval(fetchData, 20000);
-    </script>
-  </body>
-</html>
