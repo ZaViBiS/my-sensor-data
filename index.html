@@ -55,6 +55,7 @@
     </div>
 
     <script>
+      let latestTimestampSec = null;
       const ctx = document.getElementById("sensorChart").getContext("2d");
       const sensorChart = new Chart(ctx, {
         type: "line",
@@ -214,7 +215,8 @@
           document.getElementById("latestHum").textContent = latest.hum?.toFixed(1) + " %" ?? "--";
           document.getElementById("latestVpd").textContent = latest.vpd?.toFixed(2) + " kPa" ?? "--";
           document.getElementById("latestFan").textContent = latest.fan_speed?.toFixed(0) ?? "--";
-          document.getElementById("timeSince").textContent = formatTimeElapsed(latest.time);
+          latestTimestampSec = latest.time;
+          document.getElementById("timeSince").textContent = formatTimeElapsed(latestTimestampSec);
         } catch (err) {
           console.error("Data error:", err);
         }
@@ -222,6 +224,11 @@
 
       fetchData();
       setInterval(fetchData, 20000);
+      setInterval(() => {
+        if (latestTimestampSec !== null) {
+          document.getElementById("timeSince").textContent = formatTimeElapsed(latestTimestampSec);
+      }
+}, 1000);
     </script>
   </body>
 </html>
