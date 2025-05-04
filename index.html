@@ -233,7 +233,7 @@
           const fanData = [];
 
           data.sort((a, b) => a.time - b.time);
-          const latest = data[data.length - 1];
+          const latest = data[data.length - 1] || {};
 
           // Calculate averages
           let tempSum = 0, tempCount = 0;
@@ -249,10 +249,10 @@
             vpdData.push(entry.vpd ?? null);
             fanData.push(entry.fan_speed ?? null);
 
-            if (entry.temp != null) { tempSum += entry.temp; tempCount++; }
-            if (entry.hum != null) { humSum += entry.hum; humCount++; }
-            if (entry.vpd != null) { vpdSum += entry.vpd; vpdCount++; }
-            if (entry.fan_speed != null) { fanSum += entry.fan_speed; fanCount++; }
+            if (entry.temp != null && !isNaN(entry.temp)) { tempSum += entry.temp; tempCount++; }
+            if (entry.hum != null && !isNaN(entry.hum)) { humSum += entry.hum; humCount++; }
+            if (entry.vpd != null && !isNaN(entry.vpd)) { vpdSum += entry.vpd; vpdCount++; }
+            if (entry.fan_speed != null && !isNaN(entry.fan_speed)) { fanSum += entry.fan_speed; fanCount++; }
           });
 
           // Compute averages
@@ -261,35 +261,47 @@
           const avgVpd = vpdCount > 0 ? vpdSum / vpdCount : null;
           const avgFan = fanCount > 0 ? fanSum / fanCount : null;
 
-          // Create average arrays for chart (constant values across all points)
+          // Create average arrays for chart
           const avgTempData = Array(labels.length).fill(avgTemp);
           const avgHumData = Array(labels.length).fill(avgHum);
           const avgVpdData = Array(labels.length).fill(avgVpd);
           const avgFanData = Array(labels.length).fill(avgFan);
 
+          // Update chart data
           sensorChart.data.labels = labels;
           sensorChart.data.datasets[0].data = tempData;
           sensorChart.data.datasets[1].data = avgTempData;
           sensorChart.data.datasets[2].data = humData;
-          sensorChart.data.datasets[ Iglesias3].data = avgHumData;
+          sensorChart.data.datasets[3].data = avgHumData;
           sensorChart.data.datasets[4].data = vpdData;
           sensorChart.data.datasets[5].data = avgVpdData;
           sensorChart.data.datasets[6].data = fanData;
           sensorChart.data.datasets[7].data = avgFanData;
           sensorChart.update();
 
-          document.getElementById("latestTemp").textContent = latest.temp?.toFixed(1) + " °C" ?? "--";
-          document.getElementById("avgTemp").textContent = avgTemp?.toFixed(1) + " °C" ?? "--";
-          document.getElementById("latestHum").textContent = latest.hum?.toFixed(1) + " %" ?? "--";
-          document.getElementById("avgHum").textContent = avgHum?.toFixed(1) + " %" ?? "--";
-          document.getElementById("latestVpd").textContent = latest.vpd?.toFixed(2) + " kPa" ?? "--";
-          document.getElementById("avgVpd").textContent = avgVpd?.toFixed(2) + " kPa" ?? "--";
-          document.getElementById("latestFan").textContent = latest.fan_speed?.toFixed(0) ?? "--";
-          document.getElementById("avgFan").textContent = avgFan?.toFixed(0) ?? "--";
-          latestTimestampSec = latest.time;
-          document.getElementById("timeSince").textContent = formatTimeElapsed(latestTimestampSec);
+          // Update DOM elements
+          document.getElementById("latestTemp").textContent = latest.temp != null ? latest.temp.toFixed(1) + " °C" : "--";
+          document.getElementById("avgTemp").textContent = avgTemp != null ? avgTemp.toFixed(1) + " °C" : "--";
+          document.getElementById("latestHum").textContent = latest.hum != null ? latest.hum.toFixed(1) + " %" : "--";
+          document.getElementById("avgHum").textContent = avgHum != null ? avgHum.toFixed(1) + " %" : "--";
+          document.getElementById("latestVpd").textContent = latest.vpd != null ? latest.vpd.toFixed(2) + " kPa" : "--";
+          document.getElementById("avgVpd").textContent = avgVpd != null ? avgVpd.toFixed(2) + " kPa" : "--";
+          document.getElementById("latestFan").textContent = latest.fan_speed != null ? latest.fan_speed.toFixed(0) : "--";
+          document.getElementById("avgFan").textContent = avgFan != null ? avgFan.toFixed(0) : "--";
+          latestTimestampSec = latest.time || null;
+          document.getElementById("timeSince").textContent = latestTimestampSec ? formatTimeElapsed(latestTimestampSec) : "--";
         } catch (err) {
           console.error("Data error:", err);
+          // Ensure DOM elements show error state
+          document.getElementById("latestTemp").textContent = "--";
+          document.getElementById("avgTemp").textContent = "--";
+          document.getElementById("latestHum").textContent = "--";
+          document.getElementById("avgHum").textContent = "--";
+          document.getElementById("latestVpd").textContent = "--";
+          document.getElementById("avgVpd").textContent = "--";
+          document.getElementById("latestFan").textContent = "--";
+          document.getElementById("avgFan").textContent = "--";
+          document.getElementById("timeSince").textContent = "--";
         }
       }
 
