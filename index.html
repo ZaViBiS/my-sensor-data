@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Sensor Data Viewer</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
     <style>
       body {
         font-family: Arial, sans-serif;
@@ -39,10 +40,67 @@
       .vpd { color: #FFCE56; }
       .fan { color: #4BC0C0; }
       .time { color: #e0e0e0; }
+      /* Toggle Switch Styles */
+      .toggle-container {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      .toggle-label {
+        font-size: 16px;
+        margin-right: 10px;
+        vertical-align: middle;
+      }
+      .toggle-switch {
+        position: relative;
+        display: inline-block;
+        width: 50px;
+        height: 24px;
+        vertical-align: middle;
+      }
+      .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+      .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: 0.4s;
+        border-radius: 24px;
+      }
+      .slider:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: 0.4s;
+        border-radius: 50%;
+      }
+      input:checked + .slider {
+        background-color: #4BC0C0;
+      }
+      input:checked + .slider:before {
+        transform: translateX(26px);
+      }
     </style>
   </head>
   <body>
     <h1 style="text-align:center;">Sensor Data Viewer</h1>
+    <div class="toggle-container">
+      <label class="toggle-label" for="gapToggle">Show Gaps for Missing Data</label>
+      <label class="toggle-switch">
+        <input type="checkbox" id="gapToggle" checked>
+        <span class="slider"></span>
+      </label>
+    </div>
     <div id="chartContainer">
       <canvas id="sensorChart"></canvas>
     </div>
@@ -60,6 +118,7 @@
 
     <script>
       let latestTimestampSec = null;
+      let showGaps = true; // Default: show gaps
       const ctx = document.getElementById("sensorChart").getContext("2d");
       const sensorChart = new Chart(ctx, {
         type: "line",
@@ -73,6 +132,7 @@
               yAxisID: "y-temp",
               fill: false,
               pointRadius: 0,
+              spanGaps: false
             },
             {
               label: "Avg Temperature (24h)",
@@ -82,6 +142,7 @@
               yAxisID: "y-temp",
               fill: false,
               pointRadius: 0,
+              spanGaps: false
             },
             {
               label: "Humidity (%)",
@@ -90,6 +151,7 @@
               yAxisID: "y-hum",
               fill: false,
               pointRadius: 0,
+              spanGaps: false
             },
             {
               label: "Avg Humidity (24h)",
@@ -99,6 +161,7 @@
               yAxisID: "y-hum",
               fill: false,
               pointRadius: 0,
+              spanGaps: false
             },
             {
               label: "VPD (kPa)",
@@ -107,6 +170,7 @@
               yAxisID: "y-vpd",
               fill: false,
               pointRadius: 0,
+              spanGaps: false
             },
             {
               label: "Avg VPD (24h)",
@@ -116,6 +180,7 @@
               yAxisID: "y-vpd",
               fill: false,
               pointRadius: 0,
+              spanGaps: false
             },
             {
               label: "Fan Speed",
@@ -124,6 +189,7 @@
               yAxisID: "y-fan",
               fill: false,
               pointRadius: 0,
+              spanGaps: false
             },
             {
               label: "Avg Fan Speed (24h)",
@@ -133,6 +199,7 @@
               yAxisID: "y-fan",
               fill: false,
               pointRadius: 0,
+              spanGaps: false
             },
           ]
         },
@@ -144,6 +211,15 @@
           },
           scales: {
             x: {
+              type: "time",
+              time: {
+                unit: "second",
+                stepSize: 20,
+                tooltipFormat: "HH:mm:ss",
+                displayFormats: {
+                  second: "HH:mm:ss"
+                }
+              },
               ticks: { color: "#e0e0e0" },
               title: {
                 display: true,
@@ -223,31 +299,88 @@
             headers: { "Content-Type": "application/json" }
           });
 
-          const data = await response.json();
-          if (!Array.isArray(data)) throw new Error("Expected array of entries");
+          if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+          }
 
-          const labels = [];
+          const data = await response.json();
+          if (!Array.isArray(data) || data.length === 0) {
+            throw new Error("Expected non-empty array of entries");
+          }
+
+          const hasValidStructure = data.every(entry =>
+            typeof entry === 'object' &&
+            'time' in entry &&
+            Number.isFinite(entry.time)
+          );
+          if (!hasValidStructure) {
+            throw new Error("Invalid data structure: missing or invalid 'time' property");
+          }
+
+          data.sort((a, b) => a.time - b.time);
+          const latest = data[data.length - 1] || {};
+
+          // Process data based on showGaps
+          let processedData;
+          if (showGaps) {
+            // Show gaps: insert null points for missing intervals
+            processedData = [];
+            const intervalSec = 20;
+            const toleranceSec = 2;
+            for (let i = 0; i < data.length; i++) {
+              processedData.push(data[i]);
+              if (i < data.length - 1) {
+                const currentTime = data[i].time;
+                const nextTime = data[i + 1].time;
+                const timeDiff = nextTime - currentTime;
+                if (timeDiff > intervalSec + toleranceSec) {
+                  const numMissing = Math.floor((timeDiff - intervalSec) / intervalSec);
+                  for (let j = 1; j <= numMissing; j++) {
+                    const missingTime = currentTime + j * intervalSec;
+                    processedData.push({
+                      time: missingTime,
+                      temp: null,
+                      hum: null,
+                      vpd: null,
+                      fan_speed: null
+                    });
+                  }
+                }
+              }
+            }
+            processedData.sort((a, b) => a.time - b.time);
+          } else {
+            // Hide gaps: normalize timestamps to regular 20-second intervals
+            processedData = [];
+            const intervalSec = 20;
+            const startTime = data[0].time;
+            data.forEach((entry, index) => {
+              processedData.push({
+                time: startTime + index * intervalSec,
+                temp: entry.temp,
+                hum: entry.hum,
+                vpd: entry.vpd,
+                fan_speed: entry.fan_speed
+              });
+            });
+          }
+
           const tempData = [];
           const humData = [];
           const vpdData = [];
           const fanData = [];
 
-          data.sort((a, b) => a.time - b.time);
-          const latest = data[data.length - 1] || {};
-
-          // Calculate averages
           let tempSum = 0, tempCount = 0;
           let humSum = 0, humCount = 0;
           let vpdSum = 0, vpdCount = 0;
           let fanSum = 0, fanCount = 0;
 
-          data.forEach(entry => {
-            const date = new Date(entry.time * 1000);
-            labels.push(date.toLocaleTimeString('en-GB')); // 24-hour format
-            tempData.push(entry.temp ?? null);
-            humData.push(entry.hum ?? null);
-            vpdData.push(entry.vpd ?? null);
-            fanData.push(entry.fan_speed ?? null);
+          processedData.forEach(entry => {
+            const timestampMs = entry.time * 1000;
+            tempData.push({ x: timestampMs, y: entry.temp ?? null });
+            humData.push({ x: timestampMs, y: entry.hum ?? null });
+            vpdData.push({ x: timestampMs, y: entry.vpd ?? null });
+            fanData.push({ x: timestampMs, y: entry.fan_speed ?? null });
 
             if (entry.temp != null && !isNaN(entry.temp)) { tempSum += entry.temp; tempCount++; }
             if (entry.hum != null && !isNaN(entry.hum)) { humSum += entry.hum; humCount++; }
@@ -255,20 +388,21 @@
             if (entry.fan_speed != null && !isNaN(entry.fan_speed)) { fanSum += entry.fan_speed; fanCount++; }
           });
 
-          // Compute averages
           const avgTemp = tempCount > 0 ? tempSum / tempCount : null;
           const avgHum = humCount > 0 ? humSum / humCount : null;
           const avgVpd = vpdCount > 0 ? vpdSum / vpdCount : null;
           const avgFan = fanCount > 0 ? fanSum / fanCount : null;
 
-          // Create average arrays for chart
-          const avgTempData = Array(labels.length).fill(avgTemp);
-          const avgHumData = Array(labels.length).fill(avgHum);
-          const avgVpdData = Array(labels.length).fill(avgVpd);
-          const avgFanData = Array(labels.length).fill(avgFan);
+          const avgTempData = processedData.map(entry => ({ x: entry.time * 1000, y: avgTemp }));
+          const avgHumData = processedData.map(entry => ({ x: entry.time * 1000, y: avgHum }));
+          const avgVpdData = processedData.map(entry => ({ x: entry.time * 1000, y: avgVpd }));
+          const avgFanData = processedData.map(entry => ({ x: entry.time * 1000, y: avgFan }));
 
-          // Update chart data
-          sensorChart.data.labels = labels;
+          // Update spanGaps based on showGaps
+          sensorChart.data.datasets.forEach(dataset => {
+            dataset.spanGaps = !showGaps;
+          });
+
           sensorChart.data.datasets[0].data = tempData;
           sensorChart.data.datasets[1].data = avgTempData;
           sensorChart.data.datasets[2].data = humData;
@@ -279,7 +413,6 @@
           sensorChart.data.datasets[7].data = avgFanData;
           sensorChart.update();
 
-          // Update DOM elements
           document.getElementById("latestTemp").textContent = latest.temp != null ? latest.temp.toFixed(1) + " °C" : "--";
           document.getElementById("avgTemp").textContent = avgTemp != null ? avgTemp.toFixed(1) + " °C" : "--";
           document.getElementById("latestHum").textContent = latest.hum != null ? latest.hum.toFixed(1) + " %" : "--";
@@ -291,8 +424,7 @@
           latestTimestampSec = latest.time || null;
           document.getElementById("timeSince").textContent = latestTimestampSec ? formatTimeElapsed(latestTimestampSec) : "--";
         } catch (err) {
-          console.error("Data error:", err);
-          // Ensure DOM elements show error state
+          console.error("Fetch data error:", err.message);
           document.getElementById("latestTemp").textContent = "--";
           document.getElementById("avgTemp").textContent = "--";
           document.getElementById("latestHum").textContent = "--";
@@ -305,6 +437,12 @@
         }
       }
 
+      // Toggle event listener
+      document.getElementById("gapToggle").addEventListener("change", (event) => {
+        showGaps = event.target.checked;
+        fetchData(); // Refresh chart with new gap settings
+      });
+
       fetchData();
       setInterval(fetchData, 20000);
       setInterval(() => {
@@ -313,5 +451,6 @@
         }
       }, 500);
     </script>
+    <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93aaecb54a5eb0ee',t:'MTc0NjM5MjM5NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
   </body>
 </html>
