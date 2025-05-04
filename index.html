@@ -35,11 +35,15 @@
         font-weight: bold;
         color: #fff;
       }
-      .temp { color: #FF6384; }
-      .hum { color: #36A2EB; }
-      .vpd { color: #FFCE56; }
-      .fan { color: #4BC0C0; }
-      .time { color: #e0e0e0; }
+      .temp { color: #E57373; }
+      .hum { color: #64B5F6; }
+      .vpd { color: #FFD54F; }
+      .fan { color: #4DB6AC; }
+      .time { color: #B0BEC5; }
+      .separator {
+        border-top: 1px solid #B0BEC5;
+        margin: 15px 0;
+      }
       /* Toggle Switch Styles */
       .toggle-container {
         text-align: center;
@@ -85,7 +89,7 @@
         border-radius: 50%;
       }
       input:checked + .slider {
-        background-color: #4BC0C0;
+        background-color: #4DB6AC;
       }
       input:checked + .slider:before {
         transform: translateX(26px);
@@ -106,14 +110,15 @@
     </div>
     <div id="latestData">
       <p><span class="label">Latest Temperature:</span> <span class="temp" id="latestTemp">--</span></p>
-      <p><span class="label">Average Temperature (24h):</span> <span class="temp" id="avgTemp">--</span></p>
       <p><span class="label">Latest Humidity:</span> <span class="hum" id="latestHum">--</span></p>
-      <p><span class="label">Average Humidity (24h):</span> <span class="hum" id="avgHum">--</span></p>
       <p><span class="label">Latest VPD:</span> <span class="vpd" id="latestVpd">--</span></p>
-      <p><span class="label">Average VPD (24h):</span> <span class="vpd" id="avgVpd">--</span></p>
       <p><span class="label">Latest Fan Speed:</span> <span class="fan" id="latestFan">--</span></p>
-      <p><span class="label">Average Fan Speed (24h):</span> <span class="fan" id="avgFan">--</span></p>
       <p><span class="label">Time Since Last Update:</span> <span class="time" id="timeSince">--</span></p>
+      <hr class="separator">
+      <p><span class="label">Min/Avg/Max Temperature (24h):</span> <span class="temp" id="minAvgMaxTemp">--</span></p>
+      <p><span class="label">Min/Avg/Max Humidity (24h):</span> <span class="hum" id="minAvgMaxHum">--</span></p>
+      <p><span class="label">Min/Avg/Max VPD (24h):</span> <span class="vpd" id="minAvgMaxVpd">--</span></p>
+      <p><span class="label">Min/Avg/Max Fan Speed (24h):</span> <span class="fan" id="minAvgMaxFan">--</span></p>
     </div>
 
     <script>
@@ -128,7 +133,7 @@
             {
               label: "Temperature (°C)",
               data: [],
-              borderColor: "#FF6384",
+              borderColor: "#E57373",
               yAxisID: "y-temp",
               fill: false,
               pointRadius: 0,
@@ -137,7 +142,7 @@
             {
               label: "Avg Temperature (24h)",
               data: [],
-              borderColor: "#FF6384",
+              borderColor: "#E57373",
               borderDash: [5, 5],
               yAxisID: "y-temp",
               fill: false,
@@ -147,7 +152,7 @@
             {
               label: "Humidity (%)",
               data: [],
-              borderColor: "#36A2EB",
+              borderColor: "#64B5F6",
               yAxisID: "y-hum",
               fill: false,
               pointRadius: 0,
@@ -156,7 +161,7 @@
             {
               label: "Avg Humidity (24h)",
               data: [],
-              borderColor: "#36A2EB",
+              borderColor: "#64B5F6",
               borderDash: [5, 5],
               yAxisID: "y-hum",
               fill: false,
@@ -166,7 +171,7 @@
             {
               label: "VPD (kPa)",
               data: [],
-              borderColor: "#FFCE56",
+              borderColor: "#FFD54F",
               yAxisID: "y-vpd",
               fill: false,
               pointRadius: 0,
@@ -175,7 +180,7 @@
             {
               label: "Avg VPD (24h)",
               data: [],
-              borderColor: "#FFCE56",
+              borderColor: "#FFD54F",
               borderDash: [5, 5],
               yAxisID: "y-vpd",
               fill: false,
@@ -185,7 +190,7 @@
             {
               label: "Fan Speed",
               data: [],
-              borderColor: "#4BC0C0",
+              borderColor: "#4DB6AC",
               yAxisID: "y-fan",
               fill: false,
               pointRadius: 0,
@@ -194,7 +199,7 @@
             {
               label: "Avg Fan Speed (24h)",
               data: [],
-              borderColor: "#4BC0C0",
+              borderColor: "#4DB6AC",
               borderDash: [5, 5],
               yAxisID: "y-fan",
               fill: false,
@@ -233,9 +238,9 @@
               title: {
                 display: true,
                 text: "Temperature",
-                color: "#FF6384"
+                color: "#E57373"
               },
-              ticks: { color: "#FF6384" }
+              ticks: { color: "#E57373" }
             },
             "y-hum": {
               type: "linear",
@@ -243,9 +248,9 @@
               title: {
                 display: true,
                 text: "Humidity",
-                color: "#36A2EB"
+                color: "#64B5F6"
               },
-              ticks: { color: "#36A2EB" }
+              ticks: { color: "#64B5F6" }
             },
             "y-vpd": {
               type: "linear",
@@ -253,9 +258,9 @@
               title: {
                 display: true,
                 text: "VPD",
-                color: "#FFCE56"
+                color: "#FFD54F"
               },
-              ticks: { color: "#FFCE56" }
+              ticks: { color: "#FFD54F" }
             },
             "y-fan": {
               type: "linear",
@@ -263,9 +268,9 @@
               title: {
                 display: true,
                 text: "Fan",
-                color: "#4BC0C0"
+                color: "#4DB6AC"
               },
-              ticks: { color: "#4BC0C0" }
+              ticks: { color: "#4DB6AC" }
             },
           },
           plugins: {
@@ -320,6 +325,11 @@
           data.sort((a, b) => a.time - b.time);
           const latest = data[data.length - 1] || {};
 
+          // Filter data from the last 24 hours
+          const oneDaySec = 24 * 60 * 60;
+          const latestTime = latest.time;
+          const last24hData = data.filter(entry => entry.time >= latestTime - oneDaySec);
+
           // Process data based on showGaps
           let processedData;
           if (showGaps) {
@@ -370,10 +380,27 @@
           const vpdData = [];
           const fanData = [];
 
-          let tempSum = 0, tempCount = 0;
-          let humSum = 0, humCount = 0;
-          let vpdSum = 0, vpdCount = 0;
-          let fanSum = 0, fanCount = 0;
+          // Calculate min/avg/max for last 24 hours
+          let tempValues = last24hData.map(entry => entry.temp).filter(v => v != null && !isNaN(v));
+          let humValues = last24hData.map(entry => entry.hum).filter(v => v != null && !isNaN(v));
+          let vpdValues = last24hData.map(entry => entry.vpd).filter(v => v != null && !isNaN(v));
+          let fanValues = last24hData.map(entry => entry.fan_speed).filter(v => v != null && !isNaN(v));
+
+          const minTemp = tempValues.length > 0 ? Math.min(...tempValues) : null;
+          const avgTemp = tempValues.length > 0 ? tempValues.reduce((sum, v) => sum + v, 0) / tempValues.length : null;
+          const maxTemp = tempValues.length > 0 ? Math.max(...tempValues) : null;
+
+          const minHum = humValues.length > 0 ? Math.min(...humValues) : null;
+          const avgHum = humValues.length > 0 ? humValues.reduce((sum, v) => sum + v, 0) / humValues.length : null;
+          const maxHum = humValues.length > 0 ? Math.max(...humValues) : null;
+
+          const minVpd = vpdValues.length > 0 ? Math.min(...vpdValues) : null;
+          const avgVpd = vpdValues.length > 0 ? vpdValues.reduce((sum, v) => sum + v, 0) / vpdValues.length : null;
+          const maxVpd = vpdValues.length > 0 ? Math.max(...vpdValues) : null;
+
+          const minFan = fanValues.length > 0 ? Math.min(...fanValues) : null;
+          const avgFan = fanValues.length > 0 ? fanValues.reduce((sum, v) => sum + v, 0) / fanValues.length : null;
+          const maxFan = fanValues.length > 0 ? Math.max(...fanValues) : null;
 
           processedData.forEach(entry => {
             const timestampMs = entry.time * 1000;
@@ -381,17 +408,7 @@
             humData.push({ x: timestampMs, y: entry.hum ?? null });
             vpdData.push({ x: timestampMs, y: entry.vpd ?? null });
             fanData.push({ x: timestampMs, y: entry.fan_speed ?? null });
-
-            if (entry.temp != null && !isNaN(entry.temp)) { tempSum += entry.temp; tempCount++; }
-            if (entry.hum != null && !isNaN(entry.hum)) { humSum += entry.hum; humCount++; }
-            if (entry.vpd != null && !isNaN(entry.vpd)) { vpdSum += entry.vpd; vpdCount++; }
-            if (entry.fan_speed != null && !isNaN(entry.fan_speed)) { fanSum += entry.fan_speed; fanCount++; }
           });
-
-          const avgTemp = tempCount > 0 ? tempSum / tempCount : null;
-          const avgHum = humCount > 0 ? humSum / humCount : null;
-          const avgVpd = vpdCount > 0 ? vpdSum / vpdCount : null;
-          const avgFan = fanCount > 0 ? fanSum / fanCount : null;
 
           const avgTempData = processedData.map(entry => ({ x: entry.time * 1000, y: avgTemp }));
           const avgHumData = processedData.map(entry => ({ x: entry.time * 1000, y: avgHum }));
@@ -414,26 +431,26 @@
           sensorChart.update();
 
           document.getElementById("latestTemp").textContent = latest.temp != null ? latest.temp.toFixed(1) + " °C" : "--";
-          document.getElementById("avgTemp").textContent = avgTemp != null ? avgTemp.toFixed(1) + " °C" : "--";
           document.getElementById("latestHum").textContent = latest.hum != null ? latest.hum.toFixed(1) + " %" : "--";
-          document.getElementById("avgHum").textContent = avgHum != null ? avgHum.toFixed(1) + " %" : "--";
           document.getElementById("latestVpd").textContent = latest.vpd != null ? latest.vpd.toFixed(2) + " kPa" : "--";
-          document.getElementById("avgVpd").textContent = avgVpd != null ? avgVpd.toFixed(2) + " kPa" : "--";
           document.getElementById("latestFan").textContent = latest.fan_speed != null ? latest.fan_speed.toFixed(0) : "--";
-          document.getElementById("avgFan").textContent = avgFan != null ? avgFan.toFixed(0) : "--";
-          latestTimestampSec = latest.time || null;
           document.getElementById("timeSince").textContent = latestTimestampSec ? formatTimeElapsed(latestTimestampSec) : "--";
+          document.getElementById("minAvgMaxTemp").textContent = minTemp != null ? `${minTemp.toFixed(1)}/${avgTemp.toFixed(1)}/${maxTemp.toFixed(1)} °C` : "--";
+          document.getElementById("minAvgMaxHum").textContent = minHum != null ? `${minHum.toFixed(1)}/${avgHum.toFixed(1)}/${maxHum.toFixed(1)} %` : "--";
+          document.getElementById("minAvgMaxVpd").textContent = minVpd != null ? `${minVpd.toFixed(2)}/${avgVpd.toFixed(2)}/${maxVpd.toFixed(2)} kPa` : "--";
+          document.getElementById("minAvgMaxFan").textContent = minFan != null ? `${minFan.toFixed(0)}/${avgFan.toFixed(0)}/${maxFan.toFixed(0)}` : "--";
+          latestTimestampSec = latest.time || null;
         } catch (err) {
           console.error("Fetch data error:", err.message);
           document.getElementById("latestTemp").textContent = "--";
-          document.getElementById("avgTemp").textContent = "--";
           document.getElementById("latestHum").textContent = "--";
-          document.getElementById("avgHum").textContent = "--";
           document.getElementById("latestVpd").textContent = "--";
-          document.getElementById("avgVpd").textContent = "--";
           document.getElementById("latestFan").textContent = "--";
-          document.getElementById("avgFan").textContent = "--";
           document.getElementById("timeSince").textContent = "--";
+          document.getElementById("minAvgMaxTemp").textContent = "--";
+          document.getElementById("minAvgMaxHum").textContent = "--";
+          document.getElementById("minAvgMaxVpd").textContent = "--";
+          document.getElementById("minAvgMaxFan").textContent = "--";
         }
       }
 
@@ -452,5 +469,5 @@
       }, 500);
     </script>
     <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93aaecb54a5eb0ee',t:'MTc0NjM5MjM5NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
-  </body>
+  <script>(function(){function c(){var b=a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93abca769dcec002',t:'MTc0NjQwMTQ3OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
