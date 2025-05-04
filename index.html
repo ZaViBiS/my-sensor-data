@@ -1,164 +1,305 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Plant Monitor</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    body {
-      font-family: sans-serif;
-      max-width: 900px;
-      margin: auto;
-      padding: 1rem;
-    }
-    #latestData, #averageData {
-      margin-bottom: 1rem;
-      padding: 1rem;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-    }
-    .label {
-      font-weight: bold;
-    }
-    canvas {
-      max-width: 100%;
-    }
-  </style>
-</head>
-<body>
-  <h1>🌱 Plant Monitor</h1>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Sensor Data Viewer</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #1a1a1a;
+        color: #e0e0e0;
+        padding: 20px;
+      }
+      #chartContainer {
+        background-color: #2a2a2a;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+      }
+      canvas {
+        width: 100% !important;
+        height: auto !important;
+        max-height: 400px;
+      }
+      #latestData {
+        margin-top: 20px;
+        padding: 15px;
+        background-color: #2a2a2a;
+        border-radius: 8px;
+        text-align: center;
+      }
+      .label {
+        font-weight: bold;
+        color: #fff;
+      }
+      .temp { color: #FF6384; }
+      .hum { color: #36A2EB; }
+      .vpd { color: #FFCE56; }
+      .fan { color: #4BC0C0; }
+      .time { color: #e0e0e0; }
+    </style>
+  </head>
+  <body>
+    <h1 style="text-align:center;">Sensor Data Viewer</h1>
+    <div id="chartContainer">
+      <canvas id="sensorChart"></canvas>
+    </div>
+    <div id="latestData">
+      <p><span class="label">Latest Temperature:</span> <span class="temp" id="latestTemp">--</span></p>
+      <p><span class="label">Average Temperature (24h):</span> <span class="temp" id="avgTemp">--</span></p>
+      <p><span class="label">Latest Humidity:</span> <span class="hum" id="latestHum">--</span></p>
+      <p><span class="label">Average Humidity (24h):</span> <span class="hum" id="avgHum">--</span></p>
+      <p><span class="label">Latest VPD:</span> <span class="vpd" id="latestVpd">--</span></p>
+      <p><span class="label">Average VPD (24h):</span> <span class="vpd" id="avgVpd">--</span></p>
+      <p><span class="label">Latest Fan Speed:</span> <span class="fan" id="latestFan">--</span></p>
+      <p><span class="label">Average Fan Speed (24h):</span> <span class="fan" id="avgFan">--</span></p>
+      <p><span class="label">Time Since Last Update:</span> <span class="time" id="timeSince">--</span></p>
+    </div>
 
-  <div id="latestData">
-    <h3>Last Measurement</h3>
-    <p><span class="label">Time:</span> <span id="time">--</span></p>
-    <p><span class="label">Temperature:</span> <span class="temp" id="temp">--</span> °C</p>
-    <p><span class="label">Humidity:</span> <span class="hum" id="hum">--</span> %</p>
-    <p><span class="label">VPD:</span> <span class="vpd" id="vpd">--</span> kPa</p>
-    <p><span class="label">Fan Speed:</span> <span class="fan" id="fan">--</span> %</p>
-  </div>
-
-  <div id="averageData">
-    <h3>Average (24h)</h3>
-    <p><span class="label">Temperature:</span> <span class="temp" id="avgTemp">--</span> °C</p>
-    <p><span class="label">Humidity:</span> <span class="hum" id="avgHum">--</span> %</p>
-    <p><span class="label">VPD:</span> <span class="vpd" id="avgVpd">--</span> kPa</p>
-    <p><span class="label">Fan Speed:</span> <span class="fan" id="avgFan">--</span> %</p>
-  </div>
-
-  <canvas id="chart" height="300"></canvas>
-
-  <script>
-    let chart;
-
-    function calcAverage(arr) {
-      const valid = arr.filter(x => typeof x === 'number');
-      if (valid.length === 0) return null;
-      return (valid.reduce((a, b) => a + b, 0) / valid.length).toFixed(1);
-    }
-
-    async function fetchData() {
-      const res = await fetch("https://data.ygryk.de");
-      const data = await res.json();
-      if (!data.length) return;
-
-      const latest = data[data.length - 1];
-      document.getElementById("time").textContent = latest.time;
-      document.getElementById("temp").textContent = latest.temp?.toFixed(1);
-      document.getElementById("hum").textContent = latest.hum?.toFixed(1);
-      document.getElementById("vpd").textContent = latest.vpd?.toFixed(2);
-      document.getElementById("fan").textContent = latest.fan_speed?.toFixed(1);
-
-      // Averages
-      const avgTemp = calcAverage(data.map(e => e.temp));
-      const avgHum = calcAverage(data.map(e => e.hum));
-      const avgVpd = calcAverage(data.map(e => e.vpd));
-      const avgFan = calcAverage(data.map(e => e.fan_speed));
-
-      document.getElementById("avgTemp").textContent = avgTemp ?? "--";
-      document.getElementById("avgHum").textContent = avgHum ?? "--";
-      document.getElementById("avgVpd").textContent = avgVpd ?? "--";
-      document.getElementById("avgFan").textContent = avgFan ?? "--";
-
-      // Prepare chart data
-      const labels = data.map(e => e.time.slice(11, 16)); // hours:minutes
-      const temp = data.map(e => e.temp);
-      const hum = data.map(e => e.hum);
-      const vpd = data.map(e => e.vpd);
-      const fan = data.map(e => e.fan_speed);
-
-      const datasets = [
-        {
-          label: "Temperature (°C)",
-          data: temp,
-          borderColor: "red",
-          backgroundColor: "rgba(255,0,0,0.1)",
-          yAxisID: 'y',
-        },
-        {
-          label: "Humidity (%)",
-          data: hum,
-          borderColor: "blue",
-          backgroundColor: "rgba(0,0,255,0.1)",
-          yAxisID: 'y1',
-        },
-        {
-          label: "VPD (kPa)",
-          data: vpd,
-          borderColor: "green",
-          backgroundColor: "rgba(0,255,0,0.1)",
-          yAxisID: 'y2',
-        },
-        {
-          label: "Fan Speed (%)",
-          data: fan,
-          borderColor: "orange",
-          backgroundColor: "rgba(255,165,0,0.1)",
-          yAxisID: 'y3',
-        }
-      ];
-
-      if (chart) chart.destroy();
-      chart = new Chart(document.getElementById("chart"), {
+    <script>
+      let latestTimestampSec = null;
+      const ctx = document.getElementById("sensorChart").getContext("2d");
+      const sensorChart = new Chart(ctx, {
         type: "line",
         data: {
-          labels,
-          datasets
+          labels: [],
+          datasets: [
+            {
+              label: "Temperature (°C)",
+              data: [],
+              borderColor: "#FF6384",
+              yAxisID: "y-temp",
+              fill: false,
+              pointRadius: 0,
+            },
+            {
+              label: "Avg Temperature (24h)",
+              data: [],
+              borderColor: "#FF6384",
+              borderDash: [5, 5],
+              yAxisID: "y-temp",
+              fill: false,
+              pointRadius: 0,
+            },
+            {
+              label: "Humidity (%)",
+              data: [],
+              borderColor: "#36A2EB",
+              yAxisID: "y-hum",
+              fill: false,
+              pointRadius: 0,
+            },
+            {
+              label: "Avg Humidity (24h)",
+              data: [],
+              borderColor: "#36A2EB",
+              borderDash: [5, 5],
+              yAxisID: "y-hum",
+              fill: false,
+              pointRadius: 0,
+            },
+            {
+              label: "VPD (kPa)",
+              data: [],
+              borderColor: "#FFCE56",
+              yAxisID: "y-vpd",
+              fill: false,
+              pointRadius: 0,
+            },
+            {
+              label: "Avg VPD (24h)",
+              data: [],
+              borderColor: "#FFCE56",
+              borderDash: [5, 5],
+              yAxisID: "y-vpd",
+              fill: false,
+              pointRadius: 0,
+            },
+            {
+              label: "Fan Speed",
+              data: [],
+              borderColor: "#4BC0C0",
+              yAxisID: "y-fan",
+              fill: false,
+              pointRadius: 0,
+            },
+            {
+              label: "Avg Fan Speed (24h)",
+              data: [],
+              borderColor: "#4BC0C0",
+              borderDash: [5, 5],
+              yAxisID: "y-fan",
+              fill: false,
+              pointRadius: 0,
+            },
+          ]
         },
         options: {
           responsive: true,
-          maintainAspectRatio: false,
+          interaction: {
+            mode: "index",
+            intersect: false,
+          },
           scales: {
-            y: { type: 'linear', position: 'left', title: { display: true, text: 'Temperature' } },
-            y1: { type: 'linear', position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'Humidity' } },
-            y2: { type: 'linear', position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'VPD' } },
-            y3: { type: 'linear', position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'Fan Speed' } },
+            x: {
+              ticks: { color: "#e0e0e0" },
+              title: {
+                display: true,
+                text: "Time",
+                color: "#e0e0e0"
+              }
+            },
+            "y-temp": {
+              type: "linear",
+              position: "left",
+              title: {
+                display: true,
+                text: "Temperature",
+                color: "#FF6384"
+              },
+              ticks: { color: "#FF6384" }
+            },
+            "y-hum": {
+              type: "linear",
+              position: "right",
+              title: {
+                display: true,
+                text: "Humidity",
+                color: "#36A2EB"
+              },
+              ticks: { color: "#36A2EB" }
+            },
+            "y-vpd": {
+              type: "linear",
+              position: "left",
+              title: {
+                display: true,
+                text: "VPD",
+                color: "#FFCE56"
+              },
+              ticks: { color: "#FFCE56" }
+            },
+            "y-fan": {
+              type: "linear",
+              position: "right",
+              title: {
+                display: true,
+                text: "Fan",
+                color: "#4BC0C0"
+              },
+              ticks: { color: "#4BC0C0" }
+            },
           },
           plugins: {
             legend: {
-              position: 'bottom',
               labels: {
-                boxWidth: 12,
-                font: {
-                  size: 12
-                }
+                color: "#e0e0e0"
               }
-            },
-            tooltip: {
-              mode: 'index',
-              intersect: false,
             }
-          },
-          interaction: {
-            mode: 'index',
-            intersect: false,
           }
         }
       });
-    }
 
-    fetchData();
-    setInterval(fetchData, 60_000);
-  </script>
-</body>
+      function formatTimeElapsed(timestampSec) {
+        const timestampMs = parseInt(timestampSec) * 1000;
+        const now = Date.now();
+        const diffSeconds = Math.floor((now - timestampMs) / 1000);
+        if (diffSeconds < 0) return 'In the future';
+        if (diffSeconds < 60) return `${diffSeconds} sec ago`;
+        const minutes = Math.floor(diffSeconds / 60);
+        if (minutes < 60) return `${minutes} min ago`;
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) return `${hours} hr ago`;
+        const days = Math.floor(hours / 24);
+        return `${days} day${days === 1 ? '' : 's'} ago`;
+      }
+
+      async function fetchData() {
+        try {
+          const response = await fetch("https://data.ygryk.de", {
+            method: "GET",
+            headers: { "Content-Type": "application/json" }
+          });
+
+          const data = await response.json();
+          if (!Array.isArray(data)) throw new Error("Expected array of entries");
+
+          const labels = [];
+          const tempData = [];
+          const humData = [];
+          const vpdData = [];
+          const fanData = [];
+
+          data.sort((a, b) => a.time - b.time);
+          const latest = data[data.length - 1];
+
+          // Calculate averages
+          let tempSum = 0, tempCount = 0;
+          let humSum = 0, humCount = 0;
+          let vpdSum = 0, vpdCount = 0;
+          let fanSum = 0, fanCount = 0;
+
+          data.forEach(entry => {
+            const date = new Date(entry.time * 1000);
+            labels.push(date.toLocaleTimeString('en-GB')); // 24-hour format
+            tempData.push(entry.temp ?? null);
+            humData.push(entry.hum ?? null);
+            vpdData.push(entry.vpd ?? null);
+            fanData.push(entry.fan_speed ?? null);
+
+            if (entry.temp != null) { tempSum += entry.temp; tempCount++; }
+            if (entry.hum != null) { humSum += entry.hum; humCount++; }
+            if (entry.vpd != null) { vpdSum += entry.vpd; vpdCount++; }
+            if (entry.fan_speed != null) { fanSum += entry.fan_speed; fanCount++; }
+          });
+
+          // Compute averages
+          const avgTemp = tempCount > 0 ? tempSum / tempCount : null;
+          const avgHum = humCount > 0 ? humSum / humCount : null;
+          const avgVpd = vpdCount > 0 ? vpdSum / vpdCount : null;
+          const avgFan = fanCount > 0 ? fanSum / fanCount : null;
+
+          // Create average arrays for chart (constant values across all points)
+          const avgTempData = Array(labels.length).fill(avgTemp);
+          const avgHumData = Array(labels.length).fill(avgHum);
+          const avgVpdData = Array(labels.length).fill(avgVpd);
+          const avgFanData = Array(labels.length).fill(avgFan);
+
+          sensorChart.data.labels = labels;
+          sensorChart.data.datasets[0].data = tempData;
+          sensorChart.data.datasets[1].data = avgTempData;
+          sensorChart.data.datasets[2].data = humData;
+          sensorChart.data.datasets[ Iglesias3].data = avgHumData;
+          sensorChart.data.datasets[4].data = vpdData;
+          sensorChart.data.datasets[5].data = avgVpdData;
+          sensorChart.data.datasets[6].data = fanData;
+          sensorChart.data.datasets[7].data = avgFanData;
+          sensorChart.update();
+
+          document.getElementById("latestTemp").textContent = latest.temp?.toFixed(1) + " °C" ?? "--";
+          document.getElementById("avgTemp").textContent = avgTemp?.toFixed(1) + " °C" ?? "--";
+          document.getElementById("latestHum").textContent = latest.hum?.toFixed(1) + " %" ?? "--";
+          document.getElementById("avgHum").textContent = avgHum?.toFixed(1) + " %" ?? "--";
+          document.getElementById("latestVpd").textContent = latest.vpd?.toFixed(2) + " kPa" ?? "--";
+          document.getElementById("avgVpd").textContent = avgVpd?.toFixed(2) + " kPa" ?? "--";
+          document.getElementById("latestFan").textContent = latest.fan_speed?.toFixed(0) ?? "--";
+          document.getElementById("avgFan").textContent = avgFan?.toFixed(0) ?? "--";
+          latestTimestampSec = latest.time;
+          document.getElementById("timeSince").textContent = formatTimeElapsed(latestTimestampSec);
+        } catch (err) {
+          console.error("Data error:", err);
+        }
+      }
+
+      fetchData();
+      setInterval(fetchData, 20000);
+      setInterval(() => {
+        if (latestTimestampSec !== null) {
+          document.getElementById("timeSince").textContent = formatTimeElapsed(latestTimestampSec);
+        }
+      }, 500);
+    </script>
+  </body>
 </html>
