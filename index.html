@@ -465,6 +465,7 @@
       // Toggle event listener
       document.getElementById("gapToggle").addEventListener("change", (event) => {
         showGaps = event.target.checked;
+        fetchData();
       });
 
       fetchData();
