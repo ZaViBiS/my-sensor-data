@@ -13,16 +13,20 @@
         color: #e0e0e0;
         padding: 20px;
       }
-      #chartContainer {
+      #chartContainer, .mobile-chart-container {
         background-color: #2a2a2a;
         padding: 20px;
         border-radius: 8px;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        margin-bottom: 20px;
       }
       canvas {
         width: 100% !important;
         height: auto !important;
         max-height: 400px;
+      }
+      .mobile-chart-container canvas {
+        max-height: 300px;
       }
       #latestData {
         margin-top: 20px;
@@ -44,7 +48,6 @@
         border-top: 1px solid #B0BEC5;
         margin: 15px 0;
       }
-      /* Toggle Switch Styles */
       .toggle-container {
         text-align: center;
         margin-bottom: 20px;
@@ -94,6 +97,37 @@
       input:checked + .slider:before {
         transform: translateX(26px);
       }
+      .mobile-stats {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        margin-right: 20px;
+        text-align: left;
+        font-size: 14px;
+      }
+      .mobile-chart-wrapper {
+        display: flex;
+        align-items: center;
+      }
+      @media (max-width: 767px) {
+        #chartContainer {
+          display: none;
+        }
+        .mobile-charts {
+          display: block;
+        }
+        canvas {
+          max-height: 300px;
+        }
+      }
+      @media (min-width: 768px) {
+        .mobile-charts {
+          display: none;
+        }
+        .mobile-stats {
+          display: none;
+        }
+      }
     </style>
   </head>
   <body>
@@ -108,188 +142,496 @@
     <div id="chartContainer">
       <canvas id="sensorChart"></canvas>
     </div>
+    <div class="mobile-charts">
+      <div class="mobile-chart-container">
+        <h3 style="text-align:center; color:#E57373;">Temperature</h3>
+        <div class="mobile-chart-wrapper">
+          <div class="mobile-stats temp">
+            <p><span class="label">Min:</span> <span id="mobileMinTemp">--</span></p>
+            <p><span class="label">Avg:</span> <span id="mobileAvgTemp">--</span></p>
+            <p><span class="label">Max:</span> <span id="mobileMaxTemp">--</span></p>
+          </div>
+          <canvas id="tempChart"></canvas>
+        </div>
+      </div>
+      <div class="mobile-chart-container">
+        <h3 style="text-align:center; color:#64B5F6;">Humidity</h3>
+        <div class="mobile-chart-wrapper">
+          <div class="mobile-stats hum">
+            <p><span class="label">Min:</span> <span id="mobileMinHum">--</span></p>
+            <p><span class="label">Avg:</span> <span id="mobileAvgHum">--</span></p>
+            <p><span class="label">Max:</span> <span id="mobileMaxHum">--</span></p>
+          </div>
+          <canvas id="humChart"></canvas>
+        </div>
+      </div>
+      <div class="mobile-chart-container">
+        <h3 style="text-align:center; color:#FFD54F;">VPD</h3>
+        <div class="mobile-chart-wrapper">
+          <div class="mobile-stats vpd">
+            <p><span class="label">Min:</span> <span id="mobileMinVpd">--</span></p>
+            <p><span class="label">Avg:</span> <span id="mobileAvgVpd">--</span></p>
+            <p><span class="label">Max:</span> <span id="mobileMaxVpd">--</span></p>
+          </div>
+          <canvas id="vpdChart"></canvas>
+        </div>
+      </div>
+      <div class="mobile-chart-container">
+        <h3 style="text-align:center; color:#4DB6AC;">Fan Speed</h3>
+        <div class="mobile-chart-wrapper">
+          <div class="mobile-stats fan">
+            <p><span class="label">Min:</span> <span id="mobileMinFan">--</span></p>
+            <p><span class="label">Avg:</span> <span id="mobileAvgFan">--</span></p>
+            <p><span class="label">Max:</span> <span id="mobileMaxFan">--</span></p>
+          </div>
+          <canvas id="fanChart"></canvas>
+        </div>
+      </div>
+    </div>
     <div id="latestData">
       <p><span class="label">Latest Temperature:</span> <span class="temp" id="latestTemp">--</span></p>
       <p><span class="label">Latest Humidity:</span> <span class="hum" id="latestHum">--</span></p>
       <p><span class="label">Latest VPD:</span> <span class="vpd" id="latestVpd">--</span></p>
       <p><span class="label">Latest Fan Speed:</span> <span class="fan" id="latestFan">--</span></p>
       <p><span class="label">Time Since Last Update:</span> <span class="time" id="timeSince">--</span></p>
-      <hr class="separator">
-      <p><span class="label">Min/Avg/Max Temperature (24h):</span> <span class="temp" id="minAvgMaxTemp">--</span></p>
-      <p><span class="label">Min/Avg/Max Humidity (24h):</span> <span class="hum" id="minAvgMaxHum">--</span></p>
-      <p><span class="label">Min/Avg/Max VPD (24h):</span> <span class="vpd" id="minAvgMaxVpd">--</span></p>
-      <p><span class="label">Min/Avg/Max Fan Speed (24h):</span> <span class="fan" id="minAvgMaxFan">--</span></p>
     </div>
 
     <script>
       let latestTimestampSec = null;
-      let showGaps = true; // Default: show gaps
-      const ctx = document.getElementById("sensorChart").getContext("2d");
-      const sensorChart = new Chart(ctx, {
-        type: "line",
-        data: {
-          labels: [],
-          datasets: [
-            {
-              label: "Temperature (°C)",
-              data: [],
-              borderColor: "#E57373",
-              yAxisID: "y-temp",
-              fill: false,
-              pointRadius: 0,
-              spanGaps: false,
-              borderWidth: 1
-            },
-            {
-              label: "Avg Temperature (24h)",
-              data: [],
-              borderColor: "#E57373",
-              borderDash: [5, 5],
-              yAxisID: "y-temp",
-              fill: false,
-              pointRadius: 0,
-              spanGaps: false,
-              borderWidth: 1
-            },
-            {
-              label: "Humidity (%)",
-              data: [],
-              borderColor: "#64B5F6",
-              yAxisID: "y-hum",
-              fill: false,
-              pointRadius: 0,
-              spanGaps: false,
-              borderWidth: 1
-            },
-            {
-              label: "Avg Humidity (24h)",
-              data: [],
-              borderColor: "#64B5F6",
-              borderDash: [5, 5],
-              yAxisID: "y-hum",
-              fill: false,
-              pointRadius: 0,
-              spanGaps: false,
-              borderWidth: 1
-            },
-            {
-              label: "VPD (kPa)",
-              data: [],
-              borderColor: "#FFD54F",
-              yAxisID: "y-vpd",
-              fill: false,
-              pointRadius: 0,
-              spanGaps: false,
-              borderWidth: 1
-            },
-            {
-              label: "Avg VPD (24h)",
-              data: [],
-              borderColor: "#FFD54F",
-              borderDash: [5, 5],
-              yAxisID: "y-vpd",
-              fill: false,
-              pointRadius: 0,
-              spanGaps: false,
-              borderWidth: 1
-            },
-            {
-              label: "Fan Speed",
-              data: [],
-              borderColor: "#4DB6AC",
-              yAxisID: "y-fan",
-              fill: false,
-              pointRadius: 0,
-              spanGaps: false,
-              borderWidth: 1
-            },
-            {
-              label: "Avg Fan Speed (24h)",
-              data: [],
-              borderColor: "#4DB6AC",
-              borderDash: [5, 5],
-              yAxisID: "y-fan",
-              fill: false,
-              pointRadius: 0,
-              spanGaps: false,
-              borderWidth: 1
-            },
-          ]
-        },
-        options: {
-          responsive: true,
-          interaction: {
-            mode: "index",
-            intersect: false,
+      let showGaps = true;
+      const isMobile = window.innerWidth < 768;
+      let sensorChart, tempChart, humChart, vpdChart, fanChart;
+
+      // Initialize charts based on device type
+      if (!isMobile) {
+        const ctx = document.getElementById("sensorChart").getContext("2d");
+        sensorChart = new Chart(ctx, {
+          type: "line",
+          data: {
+            labels: [],
+            datasets: [
+              {
+                label: "Temperature (°C)",
+                data: [],
+                borderColor: "#E57373",
+                yAxisID: "y-temp",
+                fill: false,
+                pointRadius: 0,
+                spanGaps: false,
+                borderWidth: 1
+              },
+              {
+                label: "Avg Temperature (24h)",
+                data: [],
+                borderColor: "#E57373",
+                borderDash: [5, 5],
+                yAxisID: "y-temp",
+                fill: false,
+                pointRadius: 0,
+                spanGaps: false,
+                borderWidth: 1
+              },
+              {
+                label: "Humidity (%)",
+                data: [],
+                borderColor: "#64B5F6",
+                yAxisID: "y-hum",
+                fill: false,
+                pointRadius: 0,
+                spanGaps: false,
+                borderWidth: 1
+              },
+              {
+                label: "Avg Humidity (24h)",
+                data: [],
+                borderColor: "#64B5F6",
+                borderDash: [5, 5],
+                yAxisID: "y-hum",
+                fill: false,
+                pointRadius: 0,
+                spanGaps: false,
+                borderWidth: 1
+              },
+              {
+                label: "VPD (kPa)",
+                data: [],
+                borderColor: "#FFD54F",
+                yAxisID: "y-vpd",
+                fill: false,
+                pointRadius: 0,
+                spanGaps: false,
+                borderWidth: 1
+              },
+              {
+                label: "Avg VPD (24h)",
+                data: [],
+                borderColor: "#FFD54F",
+                borderDash: [5, 5],
+                yAxisID: "y-vpd",
+                fill: false,
+                pointRadius: 0,
+                spanGaps: false,
+                borderWidth: 1
+              },
+              {
+                label: "Fan Speed",
+                data: [],
+                borderColor: "#4DB6AC",
+                yAxisID: "y-fan",
+                fill: false,
+                pointRadius: 0,
+                spanGaps: false,
+                borderWidth: 1
+              },
+              {
+                label: "Avg Fan Speed (24h)",
+                data: [],
+                borderColor: "#4DB6AC",
+                borderDash: [5, 5],
+                yAxisID: "y-fan",
+                fill: false,
+                pointRadius: 0,
+                spanGaps: false,
+                borderWidth: 1
+              },
+            ]
           },
-          scales: {
-            x: {
-              type: "time",
-              time: {
-                unit: "second",
-                stepSize: 20,
-                tooltipFormat: "HH:mm:ss",
-                displayFormats: {
-                  second: "HH:mm:ss"
+          options: {
+            responsive: true,
+            interaction: {
+              mode: "index",
+              intersect: false,
+            },
+            scales: {
+              x: {
+                type: "time",
+                time: {
+                  unit: "second",
+                  stepSize: 60,
+                  tooltipFormat: "HH:mm:ss",
+                  displayFormats: {
+                    second: "HH:mm:ss"
+                  }
+                },
+                ticks: { color: "#e0e0e0" },
+                title: {
+                  display: true,
+                  text: "Time",
+                  color: "#e0e0e0"
                 }
               },
-              ticks: { color: "#e0e0e0" },
-              title: {
-                display: true,
-                text: "Time",
-                color: "#e0e0e0"
-              }
-            },
-            "y-temp": {
-              type: "linear",
-              position: "left",
-              title: {
-                display: true,
-                text: "Temperature",
-                color: "#E57373"
+              "y-temp": {
+                type: "linear",
+                position: "left",
+                title: {
+                  display: true,
+                  text: "Temperature",
+                  color: "#E57373"
+                },
+                ticks: { color: "#E57373" }
               },
-              ticks: { color: "#E57373" }
-            },
-            "y-hum": {
-              type: "linear",
-              position: "right",
-              title: {
-                display: true,
-                text: "Humidity",
-                color: "#64B5F6"
+              "y-hum": {
+                type: "linear",
+                position: "right",
+                title: {
+                  display: true,
+                  text: "Humidity",
+                  color: "#64B5F6"
+                },
+                ticks: { color: "#64B5F6" }
               },
-              ticks: { color: "#64B5F6" }
-            },
-            "y-vpd": {
-              type: "linear",
-              position: "left",
-              title: {
-                display: true,
-                text: "VPD",
-                color: "#FFD54F"
+              "y-vpd": {
+                type: "linear",
+                position: "left",
+                title: {
+                  display: true,
+                  text: "VPD",
+                  color: "#FFD54F"
+                },
+                ticks: { color: "#FFD54F" }
               },
-              ticks: { color: "#FFD54F" }
-            },
-            "y-fan": {
-              type: "linear",
-              position: "right",
-              title: {
-                display: true,
-                text: "Fan",
-                color: "#4DB6AC"
+              "y-fan": {
+                type: "linear",
+                position: "right",
+                title: {
+                  display: true,
+                  text: "Fan",
+                  color: "#4DB6AC"
+                },
+                ticks: { color: "#4DB6AC" }
               },
-              ticks: { color: "#4DB6AC" }
             },
-          },
-          plugins: {
-            legend: {
-              labels: {
-                color: "#e0e0e0"
+            plugins: {
+              legend: {
+                labels: {
+                  color: "#e0e0e0"
+                }
               }
             }
           }
-        }
-      });
+        });
+      } else {
+        // Initialize separate charts for mobile
+        tempChart = new Chart(document.getElementById("tempChart").getContext("2d"), {
+          type: "line",
+          data: {
+            labels: [],
+            datasets: [
+              {
+                label: "Temperature (°C)",
+                data: [],
+                borderColor: "#E57373",
+                fill: false,
+                pointRadius: 0,
+                spanGaps: false,
+                borderWidth: 1
+              },
+              {
+                label: "Avg Temperature (24h)",
+                data: [],
+                borderColor: "#E57373",
+                borderDash: [5, 5],
+                fill: false,
+                pointRadius: 0,
+                spanGaps: false,
+                borderWidth: 1
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            scales: {
+              x: {
+                type: "time",
+                time: {
+                  unit: "second",
+                  stepSize: 60,
+                  tooltipFormat: "HH:mm:ss",
+                  displayFormats: {
+                    second: "HH:mm:ss"
+                  }
+                },
+                ticks: { color: "#e0e0e0" },
+                title: {
+                  display: true,
+                  text: "Time",
+                  color: "#e0e0e0"
+                }
+              },
+              y: {
+                title: {
+                  display: true,
+                  text: "Temperature",
+                  color: "#E57373"
+                },
+                ticks: { color: "#E57373" }
+              }
+            },
+            plugins: {
+              legend: {
+                labels: {
+                  color: "#e0e0e0"
+                }
+              }
+            }
+          }
+        });
+
+        humChart = new Chart(document.getElementById("humChart").getContext("2d"), {
+          type: "line",
+          data: {
+            labels: [],
+            datasets: [
+              {
+                label: "Humidity (%)",
+                data: [],
+                borderColor: "#64B5F6",
+                fill: false,
+                pointRadius: 0,
+                spanGaps: false,
+                borderWidth: 1
+              },
+              {
+                label: "Avg Humidity (24h)",
+                data: [],
+                borderColor: "#64B5F6",
+                borderDash: [5, 5],
+                fill: false,
+                pointRadius: 0,
+                spanGaps: false,
+                borderWidth: 1
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            scales: {
+              x: {
+                type: "time",
+                time: {
+                  unit: "second",
+                  stepSize: 60,
+                  tooltipFormat: "HH:mm:ss",
+                  displayFormats: {
+                    second: "HH:mm:ss"
+                  }
+                },
+                ticks: { color: "#e0e0e0" },
+                title: {
+                  display: true,
+                  text: "Time",
+                  color: "#e0e0e0"
+                }
+              },
+              y: {
+                title: {
+                  display: true,
+                  text: "Humidity",
+                  color: "#64B5F6"
+                },
+                ticks: { color: "#64B5F6" }
+              }
+            },
+            plugins: {
+              legend: {
+                labels: {
+                  color: "#e0e0e0"
+                }
+              }
+            }
+          }
+        });
+
+        vpdChart = new Chart(document.getElementById("vpdChart").getContext("2d"), {
+          type: "line",
+          data: {
+            labels: [],
+            datasets: [
+              {
+                label: "VPD (kPa)",
+                data: [],
+                borderColor: "#FFD54F",
+                fill: false,
+                pointRadius: 0,
+                spanGaps: false,
+                borderWidth: 1
+              },
+              {
+                label: "Avg VPD (24h)",
+                data: [],
+                borderColor: "#FFD54F",
+                borderDash: [5, 5],
+                fill: false,
+                pointRadius: 0,
+                spanGaps: false,
+                borderWidth: 1
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            scales: {
+              x: {
+                type: "time",
+                time: {
+                  unit: "second",
+                  stepSize: 60,
+                  tooltipFormat: "HH:mm:ss",
+                  displayFormats: {
+                    second: "HH:mm:ss"
+                  }
+                },
+                ticks: { color: "#e0e0e0" },
+                title: {
+                  display: true,
+                  text: "Time",
+                  color: "#e0e0e0"
+                }
+              },
+              y: {
+                title: {
+                  display: true,
+                  text: "VPD",
+                  color: "#FFD54F"
+                },
+                ticks: { color: "#FFD54F" }
+              }
+            },
+            plugins: {
+              legend: {
+                labels: {
+                  color: "#e0e0e0"
+                }
+              }
+            }
+          }
+        });
+
+        fanChart = new Chart(document.getElementById("fanChart").getContext("2d"), {
+          type: "line",
+          data: {
+            labels: [],
+            datasets: [
+              {
+                label: "Fan Speed",
+                data: [],
+                borderColor: "#4DB6AC",
+                fill: false,
+                pointRadius: 0,
+                spanGaps: false,
+                borderWidth: 1
+              },
+              {
+                label: "Avg Fan Speed (24h)",
+                data: [],
+                borderColor: "#4DB6AC",
+                borderDash: [5, 5],
+                fill: false,
+                pointRadius: 0,
+                spanGaps: false,
+                borderWidth: 1
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            scales: {
+              x: {
+                type: "time",
+                time: {
+                  unit: "second",
+                  stepSize: 60,
+                  tooltipFormat: "HH:mm:ss",
+                  displayFormats: {
+                    second: "HH:mm:ss"
+                  }
+                },
+                ticks: { color: "#e0e0e0" },
+                title: {
+                  display: true,
+                  text: "Time",
+                  color: "#e0e0e0"
+                }
+              },
+              y: {
+                title: {
+                  display: true,
+                  text: "Fan",
+                  color: "#4DB6AC"
+                },
+                ticks: { color: "#4DB6AC" }
+              }
+            },
+            plugins: {
+              legend: {
+                labels: {
+                  color: "#e0e0e0"
+                }
+              }
+            }
+          }
+        });
+      }
 
       function formatTimeElapsed(timestampSec) {
         const timestampMs = parseInt(timestampSec) * 1000;
@@ -333,23 +675,49 @@
           data.sort((a, b) => a.time - b.time);
           const latest = data[data.length - 1] || {};
 
-          // Filter data from the last 24 hours
-          const oneDaySec = 24 * 60 * 60;
-          const latestTime = latest.time;
-          const last24hData = data.filter(entry => entry.time >= latestTime - oneDaySec);
+          // Reduce data points by averaging over 60-second intervals
+          const intervalSec = 60;
+          const reducedData = [];
+          let currentBucket = null;
+
+          data.forEach(entry => {
+            const bucketTime = Math.floor(entry.time / intervalSec) * intervalSec;
+            if (!currentBucket || currentBucket.time !== bucketTime) {
+              if (currentBucket) reducedData.push(currentBucket);
+              currentBucket = {
+                time: bucketTime,
+                temp: [],
+                hum: [],
+                vpd: [],
+                fan_speed: []
+              };
+            }
+            if (entry.temp != null) currentBucket.temp.push(entry.temp);
+            if (entry.hum != null) currentBucket.hum.push(entry.hum);
+            if (entry.vpd != null) currentBucket.vpd.push(entry.vpd);
+            if (entry.fan_speed != null) currentBucket.fan_speed.push(entry.fan_speed);
+          });
+          if (currentBucket) reducedData.push(currentBucket);
+
+          // Calculate averages for each bucket
+          const averagedData = reducedData.map(bucket => ({
+            time: bucket.time,
+            temp: bucket.temp.length > 0 ? bucket.temp.reduce((sum, v) => sum + v, 0) / bucket.temp.length : null,
+            hum: bucket.hum.length > 0 ? bucket.hum.reduce((sum, v) => sum + v, 0) / bucket.hum.length : null,
+            vpd: bucket.vpd.length > 0 ? bucket.vpd.reduce((sum, v) => sum + v, 0) / bucket.vpd.length : null,
+            fan_speed: bucket.fan_speed.length > 0 ? bucket.fan_speed.reduce((sum, v) => sum + v, 0) / bucket.fan_speed.length : null
+          }));
 
           // Process data based on showGaps
           let processedData;
           if (showGaps) {
-            // Show gaps: insert null points for missing intervals
             processedData = [];
-            const intervalSec = 20;
-            const toleranceSec = 2;
-            for (let i = 0; i < data.length; i++) {
-              processedData.push(data[i]);
-              if (i < data.length - 1) {
-                const currentTime = data[i].time;
-                const nextTime = data[i + 1].time;
+            const toleranceSec = 5;
+            for (let i = 0; i < averagedData.length; i++) {
+              processedData.push(averagedData[i]);
+              if (i < averagedData.length - 1) {
+                const currentTime = averagedData[i].time;
+                const nextTime = averagedData[i + 1].time;
                 const timeDiff = nextTime - currentTime;
                 if (timeDiff > intervalSec + toleranceSec) {
                   const numMissing = Math.floor((timeDiff - intervalSec) / intervalSec);
@@ -368,25 +736,19 @@
             }
             processedData.sort((a, b) => a.time - b.time);
           } else {
-            // Hide gaps: normalize timestamps to regular 20-second intervals
-            processedData = [];
-            const intervalSec = 20;
-            const startTime = data[0].time;
-            data.forEach((entry, index) => {
-              processedData.push({
-                time: startTime + index * intervalSec,
-                temp: entry.temp,
-                hum: entry.hum,
-                vpd: entry.vpd,
-                fan_speed: entry.fan_speed
-              });
-            });
+            processedData = averagedData.map((entry, index) => ({
+              time: averagedData[0].time + index * intervalSec,
+              temp: entry.temp,
+              hum: entry.hum,
+              vpd: entry.vpd,
+              fan_speed: entry.fan_speed
+            }));
           }
 
-          const tempData = [];
-          const humData = [];
-          const vpdData = [];
-          const fanData = [];
+          // Filter data from the last 24 hours
+          const oneDaySec = 24 * 60 * 60;
+          const latestTime = latest.time;
+          const last24hData = processedData.filter(entry => entry.time >= latestTime - oneDaySec);
 
           // Calculate min/avg/max for last 24 hours
           let tempValues = last24hData.map(entry => entry.temp).filter(v => v != null && !isNaN(v));
@@ -410,43 +772,77 @@
           const avgFan = fanValues.length > 0 ? fanValues.reduce((sum, v) => sum + v, 0) / fanValues.length : null;
           const maxFan = fanValues.length > 0 ? Math.max(...fanValues) : null;
 
-          processedData.forEach(entry => {
-            const timestampMs = entry.time * 1000;
-            tempData.push({ x: timestampMs, y: entry.temp ?? null });
-            humData.push({ x: timestampMs, y: entry.hum ?? null });
-            vpdData.push({ x: timestampMs, y: entry.vpd ?? null });
-            fanData.push({ x: timestampMs, y: entry.fan_speed ?? null });
-          });
+          // Prepare chart data
+          const tempData = processedData.map(entry => ({ x: entry.time * 1000, y: entry.temp ?? null }));
+          const humData = processedData.map(entry => ({ x: entry.time * 1000, y: entry.hum ?? null }));
+          const vpdData = processedData.map(entry => ({ x: entry.time * 1000, y: entry.vpd ?? null }));
+          const fanData = processedData.map(entry => ({ x: entry.time * 1000, y: entry.fan_speed ?? null }));
 
           const avgTempData = processedData.map(entry => ({ x: entry.time * 1000, y: avgTemp }));
           const avgHumData = processedData.map(entry => ({ x: entry.time * 1000, y: avgHum }));
           const avgVpdData = processedData.map(entry => ({ x: entry.time * 1000, y: avgVpd }));
           const avgFanData = processedData.map(entry => ({ x: entry.time * 1000, y: avgFan }));
 
-          // Update spanGaps based on showGaps
-          sensorChart.data.datasets.forEach(dataset => {
-            dataset.spanGaps = !showGaps;
-          });
+          // Update charts
+          if (!isMobile) {
+            sensorChart.data.datasets.forEach(dataset => {
+              dataset.spanGaps = !showGaps;
+            });
+            sensorChart.data.datasets[0].data = tempData;
+            sensorChart.data.datasets[1].data = avgTempData;
+            sensorChart.data.datasets[2].data = humData;
+            sensorChart.data.datasets[3].data = avgHumData;
+            sensorChart.data.datasets[4].data = vpdData;
+            sensorChart.data.datasets[5].data = avgVpdData;
+            sensorChart.data.datasets[6].data = fanData;
+            sensorChart.data.datasets[7].data = avgFanData;
+            sensorChart.update();
+          } else {
+            tempChart.data.datasets[0].data = tempData;
+            tempChart.data.datasets[1].data = avgTempData;
+            tempChart.data.datasets.forEach(dataset => dataset.spanGaps = !showGaps);
+            tempChart.update();
 
-          sensorChart.data.datasets[0].data = tempData;
-          sensorChart.data.datasets[1].data = avgTempData;
-          sensorChart.data.datasets[2].data = humData;
-          sensorChart.data.datasets[3].data = avgHumData;
-          sensorChart.data.datasets[4].data = vpdData;
-          sensorChart.data.datasets[5].data = avgVpdData;
-          sensorChart.data.datasets[6].data = fanData;
-          sensorChart.data.datasets[7].data = avgFanData;
-          sensorChart.update();
+            humChart.data.datasets[0].data = humData;
+            humChart.data.datasets[1].data = avgHumData;
+            humChart.data.datasets.forEach(dataset => dataset.spanGaps = !showGaps);
+            humChart.update();
 
+            vpdChart.data.datasets[0].data = vpdData;
+            vpdChart.data.datasets[1].data = avgVpdData;
+            vpdChart.data.datasets.forEach(dataset => dataset.spanGaps = !showGaps);
+            vpdChart.update();
+
+            fanChart.data.datasets[0].data = fanData;
+            fanChart.data.datasets[1].data = avgFanData;
+            fanChart.data.datasets.forEach(dataset => dataset.spanGaps = !showGaps);
+            fanChart.update();
+
+            // Update mobile stats
+            document.getElementById("mobileMinTemp").textContent = minTemp != null ? minTemp.toFixed(1) + " °C" : "--";
+            document.getElementById("mobileAvgTemp").textContent = avgTemp != null ? avgTemp.toFixed(1) + " °C" : "--";
+            document.getElementById("mobileMaxTemp").textContent = maxTemp != null ? maxTemp.toFixed(1) + " °C" : "--";
+
+            document.getElementById("mobileMinHum").textContent = minHum != null ? minHum.toFixed(1) + " %" : "--";
+            document.getElementById("mobileAvgHum").textContent = avgHum != null ? avgHum.toFixed(1) + " %" : "--";
+            document.getElementById("mobileMaxHum").textContent = maxHum != null ? maxHum.toFixed(1) + " %" : "--";
+
+            document.getElementById("mobileMinVpd").textContent = minVpd != null ? minVpd.toFixed(2) + " kPa" : "--";
+            document.getElementById("mobileAvgVpd").textContent = avgVpd != null ? avgVpd.toFixed(2) + " kPa" : "--";
+            document.getElementById("mobileMaxVpd").textContent = maxVpd != null ? maxVpd.toFixed(2) + " kPa" : "--";
+
+            document.getElementById("mobileMinFan").textContent = minFan != null ? minFan.toFixed(0) : "--";
+            document.getElementById("mobileAvgFan").textContent = avgFan != null ? avgFan.toFixed(0) : "--";
+            document.getElementById("mobileMaxFan").textContent = maxFan != null ? maxFan.toFixed(0) : "--";
+          }
+
+          // Update latest data
           document.getElementById("latestTemp").textContent = latest.temp != null ? latest.temp.toFixed(1) + " °C" : "--";
           document.getElementById("latestHum").textContent = latest.hum != null ? latest.hum.toFixed(1) + " %" : "--";
           document.getElementById("latestVpd").textContent = latest.vpd != null ? latest.vpd.toFixed(2) + " kPa" : "--";
           document.getElementById("latestFan").textContent = latest.fan_speed != null ? latest.fan_speed.toFixed(0) : "--";
           document.getElementById("timeSince").textContent = latestTimestampSec ? formatTimeElapsed(latestTimestampSec) : "--";
-          document.getElementById("minAvgMaxTemp").textContent = minTemp != null ? `${minTemp.toFixed(1)}/${avgTemp.toFixed(1)}/${maxTemp.toFixed(1)} °C` : "--";
-          document.getElementById("minAvgMaxHum").textContent = minHum != null ? `${minHum.toFixed(1)}/${avgHum.toFixed(1)}/${maxHum.toFixed(1)} %` : "--";
-          document.getElementById("minAvgMaxVpd").textContent = minVpd != null ? `${minVpd.toFixed(2)}/${avgVpd.toFixed(2)}/${maxVpd.toFixed(2)} kPa` : "--";
-          document.getElementById("minAvgMaxFan").textContent = minFan != null ? `${minFan.toFixed(0)}/${avgFan.toFixed(0)}/${maxFan.toFixed(0)}` : "--";
+
           latestTimestampSec = latest.time || null;
         } catch (err) {
           console.error("Fetch data error:", err.message);
@@ -455,10 +851,20 @@
           document.getElementById("latestVpd").textContent = "--";
           document.getElementById("latestFan").textContent = "--";
           document.getElementById("timeSince").textContent = "--";
-          document.getElementById("minAvgMaxTemp").textContent = "--";
-          document.getElementById("minAvgMaxHum").textContent = "--";
-          document.getElementById("minAvgMaxVpd").textContent = "--";
-          document.getElementById("minAvgMaxFan").textContent = "--";
+          if (isMobile) {
+            document.getElementById("mobileMinTemp").textContent = "--";
+            document.getElementById("mobileAvgTemp").textContent = "--";
+            document.getElementById("mobileMaxTemp").textContent = "--";
+            document.getElementById("mobileMinHum").textContent = "--";
+            document.getElementById("mobileAvgHum").textContent = "--";
+            document.getElementById("mobileMaxHum").textContent = "--";
+            document.getElementById("mobileMinVpd").textContent = "--";
+            document.getElementById("mobileAvgVpd").textContent = "--";
+            document.getElementById("mobileMaxVpd").textContent = "--";
+            document.getElementById("mobileMinFan").textContent = "--";
+            document.getElementById("mobileAvgFan").textContent = "--";
+            document.getElementById("mobileMaxFan").textContent = "--";
+          }
         }
       }
 
@@ -469,13 +875,12 @@
       });
 
       fetchData();
-      setInterval(fetchData, 20000);
+      setInterval(fetchData, 60000); // Update every 60 seconds
       setInterval(() => {
         if (latestTimestampSec !== null) {
           document.getElementById("timeSince").textContent = formatTimeElapsed(latestTimestampSec);
         }
       }, 500);
     </script>
-    <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93aaecb54a5eb0ee',t:'MTc0NjM5MjM5NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
-  <script>(function(){function c(){var b=a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93abca769dcec002',t:'MTc0NjQwMTQ3OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93abeb35aa21134f',t:'MTc0NjQwMjgxOS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+  </body>
 </html>
