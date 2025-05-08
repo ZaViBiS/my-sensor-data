@@ -144,56 +144,36 @@
     </div>
     <div class="mobile-charts">
       <div class="mobile-chart-container">
-        <h3 style="text-align:center; color:#E57373;">Temperature</h3>
+        <h3 style="text-align:center; color:#E57373;">Temperatur</h3>
         <div class="mobile-chart-wrapper">
-          <div class="mobile-stats temp">
-            <p><span class="label">Min:</span> <span id="mobileMinTemp">--</span></p>
-            <p><span class="label">Avg:</span> <span id="mobileAvgTemp">--</span></p>
-            <p><span class="label">Max:</span> <span id="mobileMaxTemp">--</span></p>
-          </div>
           <canvas id="tempChart"></canvas>
         </div>
       </div>
       <div class="mobile-chart-container">
-        <h3 style="text-align:center; color:#64B5F6;">Humidity</h3>
+        <h3 style="text-align:center; color:#64B5F6;">Feuchtigkeit</h3>
         <div class="mobile-chart-wrapper">
-          <div class="mobile-stats hum">
-            <p><span class="label">Min:</span> <span id="mobileMinHum">--</span></p>
-            <p><span class="label">Avg:</span> <span id="mobileAvgHum">--</span></p>
-            <p><span class="label">Max:</span> <span id="mobileMaxHum">--</span></p>
-          </div>
           <canvas id="humChart"></canvas>
         </div>
       </div>
       <div class="mobile-chart-container">
         <h3 style="text-align:center; color:#FFD54F;">VPD</h3>
         <div class="mobile-chart-wrapper">
-          <div class="mobile-stats vpd">
-            <p><span class="label">Min:</span> <span id="mobileMinVpd">--</span></p>
-            <p><span class="label">Avg:</span> <span id="mobileAvgVpd">--</span></p>
-            <p><span class="label">Max:</span> <span id="mobileMaxVpd">--</span></p>
-          </div>
           <canvas id="vpdChart"></canvas>
         </div>
       </div>
       <div class="mobile-chart-container">
-        <h3 style="text-align:center; color:#4DB6AC;">Fan Speed</h3>
+        <h3 style="text-align:center; color:#4DB6AC;">Lüftergeschwindigkeit</h3>
         <div class="mobile-chart-wrapper">
-          <div class="mobile-stats fan">
-            <p><span class="label">Min:</span> <span id="mobileMinFan">--</span></p>
-            <p><span class="label">Avg:</span> <span id="mobileAvgFan">--</span></p>
-            <p><span class="label">Max:</span> <span id="mobileMaxFan">--</span></p>
-          </div>
           <canvas id="fanChart"></canvas>
         </div>
       </div>
     </div>
     <div id="latestData">
-      <p><span class="label">Latest Temperature:</span> <span class="temp" id="latestTemp">--</span></p>
-      <p><span class="label">Latest Humidity:</span> <span class="hum" id="latestHum">--</span></p>
-      <p><span class="label">Latest VPD:</span> <span class="vpd" id="latestVpd">--</span></p>
-      <p><span class="label">Latest Fan Speed:</span> <span class="fan" id="latestFan">--</span></p>
-      <p><span class="label">Time Since Last Update:</span> <span class="time" id="timeSince">--</span></p>
+      <p><span class="label">Letzte Temperatur:</span> <span class="temp" id="latestTemp">--</span></p>
+      <p><span class="label">Letzte Feuchtigkeit:</span> <span class="hum" id="latestHum">--</span></p>
+      <p><span class="label">Letzter VPD:</span> <span class="vpd" id="latestVpd">--</span></p>
+      <p><span class="label">Letzte Lüftergeschwindigkeit:</span> <span class="fan" id="latestFan">--</span></p>
+      <p><span class="label">Zeit seit letztem Update:</span> <span class="time" id="timeSince">--</span></p>
     </div>
 
     <script>
@@ -211,17 +191,17 @@
             labels: [],
             datasets: [
               {
-                label: "Temperature (°C)",
+                label: "Temperatur (°C)",
                 data: [],
                 borderColor: "#E57373",
                 yAxisID: "y-temp",
-                fill: false,
+                fill: true,
                 pointRadius: 0,
                 spanGaps: false,
                 borderWidth: 1
               },
               {
-                label: "Avg Temperature (24h)",
+                label: "Durchschn. Temperatur (24h)",
                 data: [],
                 borderColor: "#E57373",
                 borderDash: [5, 5],
@@ -232,17 +212,17 @@
                 borderWidth: 1
               },
               {
-                label: "Humidity (%)",
+                label: "Feuchtigkeit (%)",
                 data: [],
                 borderColor: "#64B5F6",
                 yAxisID: "y-hum",
-                fill: false,
+                fill: true,
                 pointRadius: 0,
                 spanGaps: false,
                 borderWidth: 1
               },
               {
-                label: "Avg Humidity (24h)",
+                label: "Durchschn. Feuchtigkeit (24h)",
                 data: [],
                 borderColor: "#64B5F6",
                 borderDash: [5, 5],
@@ -257,13 +237,13 @@
                 data: [],
                 borderColor: "#FFD54F",
                 yAxisID: "y-vpd",
-                fill: false,
+                fill: true,
                 pointRadius: 0,
                 spanGaps: false,
                 borderWidth: 1
               },
               {
-                label: "Avg VPD (24h)",
+                label: "Durchschn. VPD (24h)",
                 data: [],
                 borderColor: "#FFD54F",
                 borderDash: [5, 5],
@@ -274,17 +254,17 @@
                 borderWidth: 1
               },
               {
-                label: "Fan Speed",
+                label: "Lüftergeschwindigkeit",
                 data: [],
                 borderColor: "#4DB6AC",
                 yAxisID: "y-fan",
-                fill: false,
+                fill: true,
                 pointRadius: 0,
                 spanGaps: false,
                 borderWidth: 1
               },
               {
-                label: "Avg Fan Speed (24h)",
+                label: "Durchschn. Lüftergeschwindigkeit (24h)",
                 data: [],
                 borderColor: "#4DB6AC",
                 borderDash: [5, 5],
@@ -306,17 +286,16 @@
               x: {
                 type: "time",
                 time: {
-                  unit: "second",
-                  stepSize: 60,
-                  tooltipFormat: "HH:mm:ss",
+                  unit: "day",
+                  tooltipFormat: "dd.MM.yyyy",
                   displayFormats: {
-                    second: "HH:mm:ss"
+                    day: "dd. MMM"
                   }
                 },
                 ticks: { color: "#e0e0e0" },
                 title: {
                   display: true,
-                  text: "Time",
+                  text: "Zeit",
                   color: "#e0e0e0"
                 }
               },
@@ -325,7 +304,7 @@
                 position: "left",
                 title: {
                   display: true,
-                  text: "Temperature",
+                  text: "Temperatur",
                   color: "#E57373"
                 },
                 ticks: { color: "#E57373" }
@@ -335,7 +314,7 @@
                 position: "right",
                 title: {
                   display: true,
-                  text: "Humidity",
+                  text: "Feuchtigkeit",
                   color: "#64B5F6"
                 },
                 ticks: { color: "#64B5F6" }
@@ -355,7 +334,7 @@
                 position: "right",
                 title: {
                   display: true,
-                  text: "Fan",
+                  text: "Lüfter",
                   color: "#4DB6AC"
                 },
                 ticks: { color: "#4DB6AC" }
@@ -378,16 +357,17 @@
             labels: [],
             datasets: [
               {
-                label: "Temperature (°C)",
+                label: "Temperatur (°C)",
                 data: [],
                 borderColor: "#E57373",
-                fill: false,
+                backgroundColor: "rgba(229, 115, 115, 0.3)",
+                fill: true,
                 pointRadius: 0,
                 spanGaps: false,
                 borderWidth: 1
               },
               {
-                label: "Avg Temperature (24h)",
+                label: "Durchschn. Temperatur (24h)",
                 data: [],
                 borderColor: "#E57373",
                 borderDash: [5, 5],
@@ -400,37 +380,78 @@
           },
           options: {
             responsive: true,
+            interaction: {
+              mode: "index",
+              intersect: false,
+            },
             scales: {
               x: {
                 type: "time",
                 time: {
-                  unit: "second",
-                  stepSize: 60,
-                  tooltipFormat: "HH:mm:ss",
+                  unit: "day",
+                  tooltipFormat: "dd.MM.yyyy",
                   displayFormats: {
-                    second: "HH:mm:ss"
+                    day: "dd. MMM"
                   }
                 },
                 ticks: { color: "#e0e0e0" },
                 title: {
                   display: true,
-                  text: "Time",
+                  text: "Zeit",
                   color: "#e0e0e0"
                 }
               },
               y: {
                 title: {
                   display: true,
-                  text: "Temperature",
+                  text: "Temperatur",
                   color: "#E57373"
                 },
-                ticks: { color: "#E57373" }
+                ticks: {
+                  color: "#E57373",
+                  callback: function(value, index, values) {
+                    if (index === 0) return "Min " + value.toFixed(1) + "°C";
+                    if (index === Math.floor(values.length / 2)) return "AVG " + value.toFixed(1) + "°C";
+                    if (index === values.length - 1) return "Max " + value.toFixed(1) + "°C";
+                    return value.toFixed(1);
+                  }
+                }
               }
             },
             plugins: {
-              legend: {
-                labels: {
-                  color: "#e0e0e0"
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    let label = context.dataset.label || '';
+                    if (label) {
+                      label += ': ';
+                    }
+                    if (context.parsed.y !== null) {
+                      label += context.parsed.y.toFixed(1) + '°C';
+                    }
+                    return label;
+                  },
+                  title: function(tooltipItems) {
+                    const date = new Date(tooltipItems[0].parsed.x);
+                    return date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' ' + date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+                  }
+                }
+              },
+              annotation: {
+                annotations: {
+                  box1: {
+                    type: 'box',
+                    xMin: new Date('2025-03-06').getTime(),
+                    xMax: new Date('2025-03-10').getTime(),
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                    borderColor: 'rgba(255, 255, 255, 0.2)',
+                    label: {
+                      content: '06., 10. März',
+                      enabled: true,
+                      position: 'start'
+                    }
+                  }
                 }
               }
             }
@@ -443,16 +464,17 @@
             labels: [],
             datasets: [
               {
-                label: "Humidity (%)",
+                label: "Feuchtigkeit (%)",
                 data: [],
                 borderColor: "#64B5F6",
-                fill: false,
+                backgroundColor: "rgba(100, 181, 246, 0.3)",
+                fill: true,
                 pointRadius: 0,
                 spanGaps: false,
                 borderWidth: 1
               },
               {
-                label: "Avg Humidity (24h)",
+                label: "Durchschn. Feuchtigkeit (24h)",
                 data: [],
                 borderColor: "#64B5F6",
                 borderDash: [5, 5],
@@ -465,37 +487,78 @@
           },
           options: {
             responsive: true,
+            interaction: {
+              mode: "index",
+              intersect: false,
+            },
             scales: {
               x: {
                 type: "time",
                 time: {
-                  unit: "second",
-                  stepSize: 60,
-                  tooltipFormat: "HH:mm:ss",
+                  unit: "day",
+                  tooltipFormat: "dd.MM.yyyy",
                   displayFormats: {
-                    second: "HH:mm:ss"
+                    day: "dd. MMM"
                   }
                 },
                 ticks: { color: "#e0e0e0" },
                 title: {
                   display: true,
-                  text: "Time",
+                  text: "Zeit",
                   color: "#e0e0e0"
                 }
               },
               y: {
                 title: {
                   display: true,
-                  text: "Humidity",
+                  text: "Feuchtigkeit",
                   color: "#64B5F6"
                 },
-                ticks: { color: "#64B5F6" }
+                ticks: {
+                  color: "#64B5F6",
+                  callback: function(value, index, values) {
+                    if (index === 0) return "Min " + value.toFixed(1) + "%";
+                    if (index === Math.floor(values.length / 2)) return "AVG " + value.toFixed(1) + "%";
+                    if (index === values.length - 1) return "Max " + value.toFixed(1) + "%";
+                    return value.toFixed(1);
+                  }
+                }
               }
             },
             plugins: {
-              legend: {
-                labels: {
-                  color: "#e0e0e0"
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    let label = context.dataset.label || '';
+                    if (label) {
+                      label += ': ';
+                    }
+                    if (context.parsed.y !== null) {
+                      label += context.parsed.y.toFixed(1) + '%';
+                    }
+                    return label;
+                  },
+                  title: function(tooltipItems) {
+                    const date = new Date(tooltipItems[0].parsed.x);
+                    return date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' ' + date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+                  }
+                }
+              },
+              annotation: {
+                annotations: {
+                  box1: {
+                    type: 'box',
+                    xMin: new Date('2025-03-06').getTime(),
+                    xMax: new Date('2025-03-10').getTime(),
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                    borderColor: 'rgba(255, 255, 255, 0.2)',
+                    label: {
+                      content: '06., 10. März',
+                      enabled: true,
+                      position: 'start'
+                    }
+                  }
                 }
               }
             }
@@ -511,13 +574,14 @@
                 label: "VPD (kPa)",
                 data: [],
                 borderColor: "#FFD54F",
-                fill: false,
+                backgroundColor: "rgba(255, 213, 79, 0.3)",
+                fill: true,
                 pointRadius: 0,
                 spanGaps: false,
                 borderWidth: 1
               },
               {
-                label: "Avg VPD (24h)",
+                label: "Durchschn. VPD (24h)",
                 data: [],
                 borderColor: "#FFD54F",
                 borderDash: [5, 5],
@@ -530,21 +594,24 @@
           },
           options: {
             responsive: true,
+            interaction: {
+              mode: "index",
+              intersect: false,
+            },
             scales: {
               x: {
                 type: "time",
                 time: {
-                  unit: "second",
-                  stepSize: 60,
-                  tooltipFormat: "HH:mm:ss",
+                  unit: "day",
+                  tooltipFormat: "dd.MM.yyyy",
                   displayFormats: {
-                    second: "HH:mm:ss"
+                    day: "dd. MMM"
                   }
                 },
                 ticks: { color: "#e0e0e0" },
                 title: {
                   display: true,
-                  text: "Time",
+                  text: "Zeit",
                   color: "#e0e0e0"
                 }
               },
@@ -554,13 +621,51 @@
                   text: "VPD",
                   color: "#FFD54F"
                 },
-                ticks: { color: "#FFD54F" }
+                ticks: {
+                  color: "#FFD54F",
+                  callback: function(value, index, values) {
+                    if (index === 0) return "Min " + value.toFixed(2) + " kPa";
+                    if (index === Math.floor(values.length / 2)) return "AVG " + value.toFixed(2) + " kPa";
+                    if (index === values.length - 1) return "Max " + value.toFixed(2) + " kPa";
+                    return value.toFixed(2);
+                  }
+                }
               }
             },
             plugins: {
-              legend: {
-                labels: {
-                  color: "#e0e0e0"
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    let label = context.dataset.label || '';
+                    if (label) {
+                      label += ': ';
+                    }
+                    if (context.parsed.y !== null) {
+                      label += context.parsed.y.toFixed(2) + ' kPa';
+                    }
+                    return label;
+                  },
+                  title: function(tooltipItems) {
+                    const date = new Date(tooltipItems[0].parsed.x);
+                    return date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' ' + date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+                  }
+                }
+              },
+              annotation: {
+                annotations: {
+                  box1: {
+                    type: 'box',
+                    xMin: new Date('2025-03-06').getTime(),
+                    xMax: new Date('2025-03-10').getTime(),
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                    borderColor: 'rgba(255, 255, 255, 0.2)',
+                    label: {
+                      content: '06., 10. März',
+                      enabled: true,
+                      position: 'start'
+                    }
+                  }
                 }
               }
             }
@@ -573,16 +678,17 @@
             labels: [],
             datasets: [
               {
-                label: "Fan Speed",
+                label: "Lüftergeschwindigkeit",
                 data: [],
                 borderColor: "#4DB6AC",
-                fill: false,
+                backgroundColor: "rgba(77, 182, 172, 0.3)",
+                fill: true,
                 pointRadius: 0,
                 spanGaps: false,
                 borderWidth: 1
               },
               {
-                label: "Avg Fan Speed (24h)",
+                label: "Durchschn. Lüftergeschwindigkeit (24h)",
                 data: [],
                 borderColor: "#4DB6AC",
                 borderDash: [5, 5],
@@ -595,37 +701,78 @@
           },
           options: {
             responsive: true,
+            interaction: {
+              mode: "index",
+              intersect: false,
+            },
             scales: {
               x: {
                 type: "time",
                 time: {
-                  unit: "second",
-                  stepSize: 60,
-                  tooltipFormat: "HH:mm:ss",
+                  unit: "day",
+                  tooltipFormat: "dd.MM.yyyy",
                   displayFormats: {
-                    second: "HH:mm:ss"
+                    day: "dd. MMM"
                   }
                 },
                 ticks: { color: "#e0e0e0" },
                 title: {
                   display: true,
-                  text: "Time",
+                  text: "Zeit",
                   color: "#e0e0e0"
                 }
               },
               y: {
                 title: {
                   display: true,
-                  text: "Fan",
+                  text: "Lüfter",
                   color: "#4DB6AC"
                 },
-                ticks: { color: "#4DB6AC" }
+                ticks: {
+                  color: "#4DB6AC",
+                  callback: function(value, index, values) {
+                    if (index === 0) return "Min " + value.toFixed(0);
+                    if (index === Math.floor(values.length / 2)) return "AVG " + value.toFixed(0);
+                    if (index === values.length - 1) return "Max " + value.toFixed(0);
+                    return value.toFixed(0);
+                  }
+                }
               }
             },
             plugins: {
-              legend: {
-                labels: {
-                  color: "#e0e0e0"
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    let label = context.dataset.label || '';
+                    if (label) {
+                      label += ': ';
+                    }
+                    if (context.parsed.y !== null) {
+                      label += context.parsed.y.toFixed(0);
+                    }
+                    return label;
+                  },
+                  title: function(tooltipItems) {
+                    const date = new Date(tooltipItems[0].parsed.x);
+                    return date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' ' + date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+                  }
+                }
+              },
+              annotation: {
+                annotations: {
+                  box1: {
+                    type: 'box',
+                    xMin: new Date('2025-03-06').getTime(),
+                    xMax: new Date('2025-03-10').getTime(),
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                    borderColor: 'rgba(255, 255, 255, 0.2)',
+                    label: {
+                      content: '06., 10. März',
+                      enabled: true,
+                      position: 'start'
+                    }
+                  }
                 }
               }
             }
@@ -637,14 +784,14 @@
         const timestampMs = parseInt(timestampSec) * 1000;
         const now = Date.now();
         const diffSeconds = Math.floor((now - timestampMs) / 1000);
-        if (diffSeconds < 0) return 'In the future';
-        if (diffSeconds < 60) return `${diffSeconds} sec ago`;
+        if (diffSeconds < 0) return 'In der Zukunft';
+        if (diffSeconds < 60) return `${diffSeconds} Sek. vor`;
         const minutes = Math.floor(diffSeconds / 60);
-        if (minutes < 60) return `${minutes} min ago`;
+        if (minutes < 60) return `${minutes} Min. vor`;
         const hours = Math.floor(minutes / 60);
-        if (hours < 24) return `${hours} hr ago`;
+        if (hours < 24) return `${hours} Std. vor`;
         const days = Math.floor(hours / 24);
-        return `${days} day${days === 1 ? '' : 's'} ago`;
+        return `${days} Tag${days === 1 ? '' : 'e'} vor`;
       }
 
       async function fetchData() {
@@ -745,7 +892,7 @@
             }));
           }
 
-          // Filter data from the last 24 hours
+          // Filter data from the last 24 hours for averages
           const oneDaySec = 24 * 60 * 60;
           const latestTime = latest.time;
           const last24hData = processedData.filter(entry => entry.time >= latestTime - oneDaySec);
@@ -783,6 +930,25 @@
           const avgVpdData = processedData.map(entry => ({ x: entry.time * 1000, y: avgVpd }));
           const avgFanData = processedData.map(entry => ({ x: entry.time * 1000, y: avgFan }));
 
+          // Update Y-axis tick values for min/avg/max
+          if (isMobile) {
+            tempChart.options.scales.y.min = minTemp != null ? Math.floor(minTemp) : 0;
+            tempChart.options.scales.y.max = maxTemp != null ? Math.ceil(maxTemp) : 100;
+            tempChart.options.scales.y.ticks.stepSize = (maxTemp - minTemp) / (tempChart.options.scales.y.ticks.maxTicksLimit || 5);
+
+            humChart.options.scales.y.min = minHum != null ? Math.floor(minHum) : 0;
+            humChart.options.scales.y.max = maxHum != null ? Math.ceil(maxHum) : 100;
+            humChart.options.scales.y.ticks.stepSize = (maxHum - minHum) / (humChart.options.scales.y.ticks.maxTicksLimit || 5);
+
+            vpdChart.options.scales.y.min = minVpd != null ? Math.floor(minVpd * 10) / 10 : 0;
+            vpdChart.options.scales.y.max = maxVpd != null ? Math.ceil(maxVpd * 10) / 10 : 5;
+            vpdChart.options.scales.y.ticks.stepSize = (maxVpd - minVpd) / (vpdChart.options.scales.y.ticks.maxTicksLimit || 5);
+
+            fanChart.options.scales.y.min = minFan != null ? Math.floor(minFan) : 0;
+            fanChart.options.scales.y.max = maxFan != null ? Math.ceil(maxFan) : 100;
+            fanChart.options.scales.y.ticks.stepSize = (maxFan - minFan) / (fanChart.options.scales.y.ticks.maxTicksLimit || 5);
+          }
+
           // Update charts
           if (!isMobile) {
             sensorChart.data.datasets.forEach(dataset => {
@@ -817,23 +983,6 @@
             fanChart.data.datasets[1].data = avgFanData;
             fanChart.data.datasets.forEach(dataset => dataset.spanGaps = !showGaps);
             fanChart.update();
-
-            // Update mobile stats
-            document.getElementById("mobileMinTemp").textContent = minTemp != null ? minTemp.toFixed(1) + " °C" : "--";
-            document.getElementById("mobileAvgTemp").textContent = avgTemp != null ? avgTemp.toFixed(1) + " °C" : "--";
-            document.getElementById("mobileMaxTemp").textContent = maxTemp != null ? maxTemp.toFixed(1) + " °C" : "--";
-
-            document.getElementById("mobileMinHum").textContent = minHum != null ? minHum.toFixed(1) + " %" : "--";
-            document.getElementById("mobileAvgHum").textContent = avgHum != null ? avgHum.toFixed(1) + " %" : "--";
-            document.getElementById("mobileMaxHum").textContent = maxHum != null ? maxHum.toFixed(1) + " %" : "--";
-
-            document.getElementById("mobileMinVpd").textContent = minVpd != null ? minVpd.toFixed(2) + " kPa" : "--";
-            document.getElementById("mobileAvgVpd").textContent = avgVpd != null ? avgVpd.toFixed(2) + " kPa" : "--";
-            document.getElementById("mobileMaxVpd").textContent = maxVpd != null ? maxVpd.toFixed(2) + " kPa" : "--";
-
-            document.getElementById("mobileMinFan").textContent = minFan != null ? minFan.toFixed(0) : "--";
-            document.getElementById("mobileAvgFan").textContent = avgFan != null ? avgFan.toFixed(0) : "--";
-            document.getElementById("mobileMaxFan").textContent = maxFan != null ? maxFan.toFixed(0) : "--";
           }
 
           // Update latest data
@@ -851,20 +1000,6 @@
           document.getElementById("latestVpd").textContent = "--";
           document.getElementById("latestFan").textContent = "--";
           document.getElementById("timeSince").textContent = "--";
-          if (isMobile) {
-            document.getElementById("mobileMinTemp").textContent = "--";
-            document.getElementById("mobileAvgTemp").textContent = "--";
-            document.getElementById("mobileMaxTemp").textContent = "--";
-            document.getElementById("mobileMinHum").textContent = "--";
-            document.getElementById("mobileAvgHum").textContent = "--";
-            document.getElementById("mobileMaxHum").textContent = "--";
-            document.getElementById("mobileMinVpd").textContent = "--";
-            document.getElementById("mobileAvgVpd").textContent = "--";
-            document.getElementById("mobileMaxVpd").textContent = "--";
-            document.getElementById("mobileMinFan").textContent = "--";
-            document.getElementById("mobileAvgFan").textContent = "--";
-            document.getElementById("mobileMaxFan").textContent = "--";
-          }
         }
       }
 
