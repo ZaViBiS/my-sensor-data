@@ -278,6 +278,7 @@
           },
           options: {
             responsive: true,
+            layout: { padding: 0 },
             interaction: {
               mode: "index",
               intersect: false,
@@ -307,7 +308,7 @@
                   text: "Temperatur",
                   color: "#E57373"
                 },
-                ticks: { color: "#E57373" }
+                ticks: { color: "#E57373", maxTicksLimit: 4, padding: 2 }
               },
               "y-hum": {
                 type: "linear",
@@ -317,7 +318,7 @@
                   text: "Feuchtigkeit",
                   color: "#64B5F6"
                 },
-                ticks: { color: "#64B5F6" }
+                ticks: { color: "#64B5F6", maxTicksLimit: 4, padding: 2 }
               },
               "y-vpd": {
                 type: "linear",
@@ -327,7 +328,7 @@
                   text: "VPD",
                   color: "#FFD54F"
                 },
-                ticks: { color: "#FFD54F" }
+                ticks: { color: "#FFD54F", maxTicksLimit: 4, padding: 2 }
               },
               "y-fan": {
                 type: "linear",
@@ -337,7 +338,7 @@
                   text: "Lüfter",
                   color: "#4DB6AC"
                 },
-                ticks: { color: "#4DB6AC" }
+                ticks: { color: "#4DB6AC", maxTicksLimit: 4, padding: 2 }
               },
             },
             plugins: {
@@ -380,6 +381,7 @@
           },
           options: {
             responsive: true,
+            layout: { padding: 0 },
             interaction: {
               mode: "index",
               intersect: false,
@@ -487,6 +489,7 @@
           },
           options: {
             responsive: true,
+            layout: { padding: 0 },
             interaction: {
               mode: "index",
               intersect: false,
@@ -594,6 +597,7 @@
           },
           options: {
             responsive: true,
+            layout: { padding: 0 },
             interaction: {
               mode: "index",
               intersect: false,
@@ -701,6 +705,7 @@
           },
           options: {
             responsive: true,
+            layout: { padding: 0 },
             interaction: {
               mode: "index",
               intersect: false,
@@ -993,6 +998,21 @@
           document.getElementById("timeSince").textContent = latestTimestampSec ? formatTimeElapsed(latestTimestampSec) : "--";
 
           latestTimestampSec = latest.time || null;
+          const tableBody = document.querySelector("#dataTable tbody");
+          tableBody.innerHTML = "";
+          processedData.slice(-30).forEach(entry => {
+            const date = new Date(entry.time * 1000);
+            const row = document.createElement("tr");
+            row.innerHTML = `
+              <td>${date.toLocaleTimeString("de-DE", { hour: '2-digit', minute: '2-digit' })}</td>
+              <td>${entry.temp != null ? entry.temp.toFixed(1) : "--"}</td>
+              <td>${entry.hum != null ? entry.hum.toFixed(1) : "--"}</td>
+              <td>${entry.vpd != null ? entry.vpd.toFixed(2) : "--"}</td>
+              <td>${entry.fan_speed != null ? entry.fan_speed.toFixed(0) : "--"}</td>
+            `;
+            tableBody.appendChild(row);
+          });
+
         } catch (err) {
           console.error("Fetch data error:", err.message);
           document.getElementById("latestTemp").textContent = "--";
@@ -1017,5 +1037,15 @@
         }
       }, 500);
     </script>
-  </body>
+  
+<div id="dataTableContainer" style="margin-top: 20px; background-color: #2a2a2a; padding: 10px; border-radius: 8px;">
+  <h3 style="text-align: center;">Таблиця останніх значень</h3>
+  <table id="dataTable" style="width: 100%; color: #e0e0e0; font-size: 14px;">
+    <thead>
+      <tr><th>Час</th><th>Температура (°C)</th><th>Вологість (%)</th><th>VPD (kPa)</th><th>Лю́фтер</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+</body>
 </html>
