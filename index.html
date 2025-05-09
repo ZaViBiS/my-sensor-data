@@ -1,43 +1,4 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!doctype html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -100,17 +61,38 @@
         margin-bottom: 20px;
       }
       canvas {
-        width: 100 !important;
+        width: 100% !important;
         height: auto !important;
-        max-height: 300px;
+        max-height: 400px;
+        min-height: 300px; /* Added to ensure minimum visibility */
       }
       @media (max-width: 767px) {
         .latest-values {
           flex-direction: column;
           gap: 10px;
+          font-size: 18px; /* Reduced font size for better fit */
+        }
+        .latest-values span {
+          padding: 8px 16px; /* Adjusted padding for smaller screens */
         }
         .time-range {
           flex-wrap: wrap;
+          gap: 8px;
+        }
+        .time-range button {
+          padding: 4px 8px;
+          font-size: 14px; /* Smaller buttons for mobile */
+        }
+        .chart-container {
+          padding: 10px;
+          margin-bottom: 15px; /* Reduced margin for tighter layout */
+        }
+        canvas {
+          max-height: 350px; /* Increased for better visibility on mobile */
+          min-height: 250px; /* Ensure minimum height for readability */
+        }
+        .chart-container h3 {
+          font-size: 16px; /* Smaller title font on mobile */
         }
       }
     </style>
@@ -184,19 +166,20 @@
         },
         options: {
           responsive: true,
+          maintainAspectRatio: false, // Allow chart to stretch vertically
           interaction: { mode: "index", intersect: false },
           layout: { padding: 0 },
           scales: {
             x: { 
               type: "time", 
               time: { unit: "minute", tooltipFormat: "HH:mm", displayFormats: { minute: "HH:mm" } },
-              ticks: { color: "#e0e0e0", padding: 0 }, 
+              ticks: { color: "#e0e0e0", padding: 0, maxTicksLimit: 6 }, // Reduced ticks for mobile readability
               title: { display: true, text: "Zeit", color: "#e0e0e0" }, 
               border: { display: false } 
             },
             y: { 
               title: { display: true, text: "Temperatur", color: "#E57373" }, 
-              ticks: { color: "#E57373", padding: 0 }, 
+              ticks: { color: "#E57373", padding: 0, maxTicksLimit: 5 }, // Reduced ticks for clarity
               border: { display: false } 
             }
           },
@@ -246,19 +229,20 @@
         },
         options: {
           responsive: true,
+          maintainAspectRatio: false, // Allow chart to stretch vertically
           interaction: { mode: "index", intersect: false },
           layout: { padding: 0 },
           scales: {
             x: { 
               type: "time", 
               time: { unit: "minute", tooltipFormat: "HH:mm", displayFormats: { minute: "HH:mm" } },
-              ticks: { color: "#e0e0e0", padding: 0 }, 
+              ticks: { color: "#e0e0e0", padding: 0, maxTicksLimit: 6 }, 
               title: { display: true, text: "Zeit", color: "#e0e0e0" }, 
               border: { display: false } 
             },
             y: { 
               title: { display: true, text: "Luftfeuchtigkeit", color: "#64B5F6" }, 
-              ticks: { color: "#64B5F6", padding: 0 }, 
+              ticks: { color: "#64B5F6", padding: 0, maxTicksLimit: 5 }, 
               border: { display: false } 
             }
           },
@@ -308,19 +292,20 @@
         },
         options: {
           responsive: true,
+          maintainAspectRatio: false, // Allow chart to stretch vertically
           interaction: { mode: "index", intersect: false },
           layout: { padding: 0 },
           scales: {
             x: { 
               type: "time", 
               time: { unit: "minute", tooltipFormat: "HH:mm", displayFormats: { minute: "HH:mm" } },
-              ticks: { color: "#e0e0e0", padding: 0 }, 
+              ticks: { color: "#e0e0e0", padding: 0, maxTicksLimit: 6 }, 
               title: { display: true, text: "Zeit", color: "#e0e0e0" }, 
               border: { display: false } 
             },
             y: { 
               title: { display: true, text: "VPD", color: "#FFD54F" }, 
-              ticks: { color: "#FFD54F", padding: 0 }, 
+              ticks: { color: "#FFD54F", padding: 0, maxTicksLimit: 5 }, 
               border: { display: false } 
             }
           },
@@ -370,19 +355,20 @@
         },
         options: {
           responsive: true,
+          maintainAspectRatio: false, // Allow chart to stretch vertically
           interaction: { mode: "index", intersect: false },
           layout: { padding: 0 },
           scales: {
             x: { 
               type: "time", 
               time: { unit: "minute", tooltipFormat: "HH:mm", displayFormats: { minute: "HH:mm" } },
-              ticks: { color: "#e0e0e0", padding: 0 }, 
+              ticks: { color: "#e0e0e0", padding: 0, maxTicksLimit: 6 }, 
               title: { display: true, text: "Zeit", color: "#e0e0e0" }, 
               border: { display: false } 
             },
             y: { 
               title: { display: true, text: "Lüfter", color: "#4DB6AC" }, 
-              ticks: { color: "#4DB6AC", padding: 0 }, 
+              ticks: { color: "#4DB6AC", padding: 0, maxTicksLimit: 5 }, 
               border: { display: false } 
             }
           },
@@ -500,40 +486,7 @@
         data.sort((a, b) => a.time - b.time);
         const latest = data[data.length - 1] || {};
 
-        const intervalSec = 60;
-        const reducedData = [];
-        let currentBucket = null;
-
-        data.forEach(entry => {
-          const bucketTime = Math.floor(entry.time / intervalSec) * intervalSec;
-          if (!currentBucket || currentBucket.time !== bucketTime) {
-            if (currentBucket) reducedData.push(currentBucket);
-            currentBucket = { time: bucketTime, temp: [], hum: [], vpd: [], fan_speed: [] };
-          }
-          if (entry.temp != null) currentBucket.temp.push(entry.temp);
-          if (entry.hum != null) currentBucket.hum.push(entry.hum);
-          if (entry.vpd != null) currentBucket.vpd.push(entry.vpd);
-          if (entry.fan_speed != null) currentBucket.fan_speed.push(entry.fan_speed);
-        });
-        if (currentBucket) reducedData.push(currentBucket);
-
-        const averagedData = reducedData.map(bucket => ({
-          time: bucket.time,
-          temp: bucket.temp.length > 0 ? bucket.temp.reduce((sum, v) => sum + v, 0) / bucket.temp.length : null,
-          hum: bucket.hum.length > 0 ? bucket.hum.reduce((sum, v) => sum + v, 0) / bucket.hum.length : null,
-          vpd: bucket.vpd.length > 0 ? bucket.vpd.reduce((sum, v) => sum + v, 0) / bucket.vpd.length : null,
-          fan_speed: bucket.fan_speed.length > 0 ? bucket.fan_speed.reduce((sum, v) => sum + v, 0) / bucket.fan_speed.length : null
-        }));
-
-        console.log("Averaged Data (fan_speed):", averagedData.map(d => d.fan_speed));
-
-        let processedData = averagedData.map((entry, index) => ({
-          time: averagedData[0].time + index * intervalSec,
-          temp: entry.temp,
-          hum: entry.hum,
-          vpd: entry.vpd,
-          fan_speed: entry.fan_speed
-        }));
+        let processedData = data;
 
         const now = Date.now() / 1000;
         const ranges = {
@@ -545,14 +498,10 @@
         };
         processedData = processedData.filter(entry => entry.time >= now - ranges[timeRange]);
 
-        console.log("Processed Data (fan_speed):", processedData.map(d => d.fan_speed));
-
         const tempValues = processedData.map(entry => entry.temp).filter(v => v != null && !isNaN(v));
         const humValues = processedData.map(entry => entry.hum).filter(v => v != null && !isNaN(v));
         const vpdValues = processedData.map(entry => entry.vpd).filter(v => v != null && !isNaN(v));
         const fanValues = processedData.map(entry => entry.fan_speed).filter(v => v != null && !isNaN(v));
-
-        console.log("Fan Values for Calculation:", fanValues);
 
         const minTemp = tempValues.length > 0 ? Math.min(...tempValues) : null;
         const avgTemp = tempValues.length > 0 ? tempValues.reduce((sum, v) => sum + v, 0) / tempValues.length : null;
@@ -570,8 +519,6 @@
         const avgFan = fanValues.length > 0 ? fanValues.reduce((sum, v) => sum + v, 0) / fanValues.length : null;
         const maxFan = fanValues.length > 0 ? Math.max(...fanValues) : null;
 
-        console.log("Fan Speed Stats - Min:", minFan, "Avg:", avgFan, "Max:", maxFan);
-
         const tempData = processedData.map(entry => ({ x: entry.time * 1000, y: entry.temp ?? null }));
         const humData = processedData.map(entry => ({ x: entry.time * 1000, y: entry.hum ?? null }));
         const vpdData = processedData.map(entry => ({ x: entry.time * 1000, y: entry.vpd ?? null }));
@@ -581,9 +528,6 @@
         const avgHumData = processedData.map(entry => ({ x: entry.time * 1000, y: avgHum }));
         const avgVpdData = processedData.map(entry => ({ x: entry.time * 1000, y: avgVpd }));
         const avgFanData = processedData.map(entry => ({ x: entry.time * 1000, y: avgFan }));
-
-        console.log("Fan Chart Data:", fanData);
-        console.log("Fan Avg Chart Data:", avgFanData);
 
         tempChart.data.datasets[0].data = tempData;
         tempChart.data.datasets[1].data = avgTempData;
