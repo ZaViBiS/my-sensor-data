@@ -28,7 +28,7 @@
       .mobile-chart-container canvas {
         max-height: 300px;
       }
-      #latestData {
+      #latestData, #allTimeStats {
         margin-top: 20px;
         padding: 15px;
         background-color: #2a2a2a;
@@ -175,6 +175,13 @@
       <p><span class="label">Letzte Lüftergeschwindigkeit:</span> <span class="fan" id="latestFan">--</span></p>
       <p><span class="label">Zeit seit letztem Update:</span> <span class="time" id="timeSince">--</span></p>
     </div>
+    <div id="allTimeStats">
+      <h3 style="text-align:center;">Statistiken für alle Daten</h3>
+      <p><span class="label">Temperatur:</span> <span class="temp">Min: <span id="allMinTemp">--</span>, Avg: <span id="allAvgTemp">--</span>, Max: <span id="allMaxTemp">--</span></span></p>
+      <p><span class="label">Feuchtigkeit:</span> <span class="hum">Min: <span id="allMinHum">--</span>, Avg: <span id="allAvgHum">--</span>, Max: <span id="allMaxHum">--</span></span></p>
+      <p><span class="label">VPD:</span> <span class="vpd">Min: <span id="allMinVpd">--</span>, Avg: <span id="allAvgVpd">--</span>, Max: <span id="allMaxVpd">--</span></span></p>
+      <p><span class="label">Lüftergeschwindigkeit:</span> <span class="fan">Min: <span id="allMinFan">--</span>, Avg: <span id="allAvgFan">--</span>, Max: <span id="allMaxFan">--</span></span></p>
+    </div>
 
     <script>
       let latestTimestampSec = null;
@@ -278,10 +285,12 @@
           },
           options: {
             responsive: true,
-            layout: { padding: 0 },
             interaction: {
               mode: "index",
               intersect: false,
+            },
+            layout: {
+              padding: 0
             },
             scales: {
               x: {
@@ -293,12 +302,13 @@
                     day: "dd. MMM"
                   }
                 },
-                ticks: { color: "#e0e0e0" },
+                ticks: { color: "#e0e0e0", padding: 0 },
                 title: {
                   display: true,
                   text: "Zeit",
                   color: "#e0e0e0"
-                }
+                },
+                border: { display: false }
               },
               "y-temp": {
                 type: "linear",
@@ -308,7 +318,8 @@
                   text: "Temperatur",
                   color: "#E57373"
                 },
-                ticks: { color: "#E57373", maxTicksLimit: 4, padding: 2 }
+                ticks: { color: "#E57373", padding: 0 },
+                border: { display: false }
               },
               "y-hum": {
                 type: "linear",
@@ -318,7 +329,8 @@
                   text: "Feuchtigkeit",
                   color: "#64B5F6"
                 },
-                ticks: { color: "#64B5F6", maxTicksLimit: 4, padding: 2 }
+                ticks: { color: "#64B5F6", padding: 0 },
+                border: { display: false }
               },
               "y-vpd": {
                 type: "linear",
@@ -328,7 +340,8 @@
                   text: "VPD",
                   color: "#FFD54F"
                 },
-                ticks: { color: "#FFD54F", maxTicksLimit: 4, padding: 2 }
+                ticks: { color: "#FFD54F", padding: 0 },
+                border: { display: false }
               },
               "y-fan": {
                 type: "linear",
@@ -338,7 +351,8 @@
                   text: "Lüfter",
                   color: "#4DB6AC"
                 },
-                ticks: { color: "#4DB6AC", maxTicksLimit: 4, padding: 2 }
+                ticks: { color: "#4DB6AC", padding: 0 },
+                border: { display: false }
               },
             },
             plugins: {
@@ -381,10 +395,12 @@
           },
           options: {
             responsive: true,
-            layout: { padding: 0 },
             interaction: {
               mode: "index",
               intersect: false,
+            },
+            layout: {
+              padding: 0
             },
             scales: {
               x: {
@@ -396,12 +412,13 @@
                     day: "dd. MMM"
                   }
                 },
-                ticks: { color: "#e0e0e0" },
+                ticks: { color: "#e0e0e0", padding: 0 },
                 title: {
                   display: true,
                   text: "Zeit",
                   color: "#e0e0e0"
-                }
+                },
+                border: { display: false }
               },
               y: {
                 title: {
@@ -411,13 +428,15 @@
                 },
                 ticks: {
                   color: "#E57373",
+                  padding: 0,
                   callback: function(value, index, values) {
                     if (index === 0) return "Min " + value.toFixed(1) + "°C";
                     if (index === Math.floor(values.length / 2)) return "AVG " + value.toFixed(1) + "°C";
                     if (index === values.length - 1) return "Max " + value.toFixed(1) + "°C";
                     return value.toFixed(1);
                   }
-                }
+                },
+                border: { display: false }
               }
             },
             plugins: {
@@ -489,10 +508,12 @@
           },
           options: {
             responsive: true,
-            layout: { padding: 0 },
             interaction: {
               mode: "index",
               intersect: false,
+            },
+            layout: {
+              padding: 0
             },
             scales: {
               x: {
@@ -504,12 +525,13 @@
                     day: "dd. MMM"
                   }
                 },
-                ticks: { color: "#e0e0e0" },
+                ticks: { color: "#e0e0e0", padding: 0 },
                 title: {
                   display: true,
                   text: "Zeit",
                   color: "#e0e0e0"
-                }
+                },
+                border: { display: false }
               },
               y: {
                 title: {
@@ -519,13 +541,15 @@
                 },
                 ticks: {
                   color: "#64B5F6",
+                  padding: 0,
                   callback: function(value, index, values) {
                     if (index === 0) return "Min " + value.toFixed(1) + "%";
                     if (index === Math.floor(values.length / 2)) return "AVG " + value.toFixed(1) + "%";
                     if (index === values.length - 1) return "Max " + value.toFixed(1) + "%";
                     return value.toFixed(1);
                   }
-                }
+                },
+                border: { display: false }
               }
             },
             plugins: {
@@ -597,10 +621,12 @@
           },
           options: {
             responsive: true,
-            layout: { padding: 0 },
             interaction: {
               mode: "index",
               intersect: false,
+            },
+            layout: {
+              padding: 0
             },
             scales: {
               x: {
@@ -612,12 +638,13 @@
                     day: "dd. MMM"
                   }
                 },
-                ticks: { color: "#e0e0e0" },
+                ticks: { color: "#e0e0e0", padding: 0 },
                 title: {
                   display: true,
                   text: "Zeit",
                   color: "#e0e0e0"
-                }
+                },
+                border: { display: false }
               },
               y: {
                 title: {
@@ -627,13 +654,15 @@
                 },
                 ticks: {
                   color: "#FFD54F",
+                  padding: 0,
                   callback: function(value, index, values) {
                     if (index === 0) return "Min " + value.toFixed(2) + " kPa";
                     if (index === Math.floor(values.length / 2)) return "AVG " + value.toFixed(2) + " kPa";
                     if (index === values.length - 1) return "Max " + value.toFixed(2) + " kPa";
                     return value.toFixed(2);
                   }
-                }
+                },
+                border: { display: false }
               }
             },
             plugins: {
@@ -705,10 +734,12 @@
           },
           options: {
             responsive: true,
-            layout: { padding: 0 },
             interaction: {
               mode: "index",
               intersect: false,
+            },
+            layout: {
+              padding: 0
             },
             scales: {
               x: {
@@ -720,12 +751,13 @@
                     day: "dd. MMM"
                   }
                 },
-                ticks: { color: "#e0e0e0" },
+                ticks: { color: "#e0e0e0", padding: 0 },
                 title: {
                   display: true,
                   text: "Zeit",
                   color: "#e0e0e0"
-                }
+                },
+                border: { display: false }
               },
               y: {
                 title: {
@@ -735,13 +767,15 @@
                 },
                 ticks: {
                   color: "#4DB6AC",
+                  padding: 0,
                   callback: function(value, index, values) {
                     if (index === 0) return "Min " + value.toFixed(0);
                     if (index === Math.floor(values.length / 2)) return "AVG " + value.toFixed(0);
                     if (index === values.length - 1) return "Max " + value.toFixed(0);
                     return value.toFixed(0);
                   }
-                }
+                },
+                border: { display: false }
               }
             },
             plugins: {
@@ -897,32 +931,59 @@
             }));
           }
 
-          // Filter data from the last 24 hours for averages
+          // Calculate min/avg/max for all data
+          let allTempValues = processedData.map(entry => entry.temp).filter(v => v != null && !isNaN(v));
+          let allHumValues = processedData.map(entry => entry.hum).filter(v => v != null && !isNaN(v));
+          let allVpdValues = processedData.map(entry => entry.vpd).filter(v => v != null && !isNaN(v));
+          let allFanValues = processedData.map(entry => entry.fan_speed).filter(v => v != null && !isNaN(v));
+
+          const allMinTemp = allTempValues.length > 0 ? Math.min(...allTempValues) : null;
+          const allAvgTemp = allTempValues.length > 0 ? allTempValues.reduce((sum, v) => sum + v, 0) / allTempValues.length : null;
+          const allMaxTemp = allTempValues.length > 0 ? Math.max(...allTempValues) : null;
+
+          const allMinHum = allHumValues.length > 0 ? Math.min(...allHumValues) : null;
+          const allAvgHum = allHumValues.length > 0 ? allHumValues.reduce((sum, v) => sum + v, 0) / allHumValues.length : null;
+          const allMaxHum = allHumValues.length > 0 ? Math.max(...allHumValues) : null;
+
+          const allMinVpd = allVpdValues.length > 0 ? Math.min(...allVpdValues) : null;
+          const allAvgVpd = allVpdValues.length > 0 ? allVpdValues.reduce((sum, v) => sum + v, 0) / allVpdValues.length : null;
+          const allMaxVpd = allVpdValues.length > 0 ? Math.max(...allVpdValues) : null;
+
+          const allMinFan = allFanValues.length > 0 ? Math.min(...allFanValues) : null;
+          const allAvgFan = allFanValues.length > 0 ? allFanValues.reduce((sum, v) => sum + v, 0) / allFanValues.length : null;
+          const allMaxFan = allFanValues.length > 0 ? Math.max(...allFanValues) : null;
+
+          // Update all-time stats display
+          document.getElementById("allMinTemp").textContent = allMinTemp != null ? allMinTemp.toFixed(1) + " °C" : "--";
+          document.getElementById("allAvgTemp").textContent = allAvgTemp != null ? allAvgTemp.toFixed(1) + " °C" : "--";
+          document.getElementById("allMaxTemp").textContent = allMaxTemp != null ? allMaxTemp.toFixed(1) + " °C" : "--";
+
+          document.getElementById("allMinHum").textContent = allMinHum != null ? allMinHum.toFixed(1) + " %" : "--";
+          document.getElementById("allAvgHum").textContent = allAvgHum != null ? allAvgHum.toFixed(1) + " %" : "--";
+          document.getElementById("allMaxHum").textContent = allMaxHum != null ? allMaxHum.toFixed(1) + " %" : "--";
+
+          document.getElementById("allMinVpd").textContent = allMinVpd != null ? allMinVpd.toFixed(2) + " kPa" : "--";
+          document.getElementById("allAvgVpd").textContent = allAvgVpd != null ? allAvgVpd.toFixed(2) + " kPa" : "--";
+          document.getElementById("allMaxVpd").textContent = allMaxVpd != null ? allMaxVpd.toFixed(2) + " kPa" : "--";
+
+          document.getElementById("allMinFan").textContent = allMinFan != null ? allMinFan.toFixed(0) : "--";
+          document.getElementById("allAvgFan").textContent = allAvgFan != null ? allAvgFan.toFixed(0) : "--";
+          document.getElementById("allMaxFan").textContent = allMaxFan != null ? allMaxFan.toFixed(0) : "--";
+
+          // Filter data from the last 24 hours for averages (only for the 24h average line)
           const oneDaySec = 24 * 60 * 60;
           const latestTime = latest.time;
           const last24hData = processedData.filter(entry => entry.time >= latestTime - oneDaySec);
 
-          // Calculate min/avg/max for last 24 hours
           let tempValues = last24hData.map(entry => entry.temp).filter(v => v != null && !isNaN(v));
           let humValues = last24hData.map(entry => entry.hum).filter(v => v != null && !isNaN(v));
           let vpdValues = last24hData.map(entry => entry.vpd).filter(v => v != null && !isNaN(v));
           let fanValues = last24hData.map(entry => entry.fan_speed).filter(v => v != null && !isNaN(v));
 
-          const minTemp = tempValues.length > 0 ? Math.min(...tempValues) : null;
           const avgTemp = tempValues.length > 0 ? tempValues.reduce((sum, v) => sum + v, 0) / tempValues.length : null;
-          const maxTemp = tempValues.length > 0 ? Math.max(...tempValues) : null;
-
-          const minHum = humValues.length > 0 ? Math.min(...humValues) : null;
           const avgHum = humValues.length > 0 ? humValues.reduce((sum, v) => sum + v, 0) / humValues.length : null;
-          const maxHum = humValues.length > 0 ? Math.max(...humValues) : null;
-
-          const minVpd = vpdValues.length > 0 ? Math.min(...vpdValues) : null;
           const avgVpd = vpdValues.length > 0 ? vpdValues.reduce((sum, v) => sum + v, 0) / vpdValues.length : null;
-          const maxVpd = vpdValues.length > 0 ? Math.max(...vpdValues) : null;
-
-          const minFan = fanValues.length > 0 ? Math.min(...fanValues) : null;
           const avgFan = fanValues.length > 0 ? fanValues.reduce((sum, v) => sum + v, 0) / fanValues.length : null;
-          const maxFan = fanValues.length > 0 ? Math.max(...fanValues) : null;
 
           // Prepare chart data
           const tempData = processedData.map(entry => ({ x: entry.time * 1000, y: entry.temp ?? null }));
@@ -935,23 +996,23 @@
           const avgVpdData = processedData.map(entry => ({ x: entry.time * 1000, y: avgVpd }));
           const avgFanData = processedData.map(entry => ({ x: entry.time * 1000, y: avgFan }));
 
-          // Update Y-axis tick values for min/avg/max
+          // Update Y-axis tick values for min/avg/max using all-time data
           if (isMobile) {
-            tempChart.options.scales.y.min = minTemp != null ? Math.floor(minTemp) : 0;
-            tempChart.options.scales.y.max = maxTemp != null ? Math.ceil(maxTemp) : 100;
-            tempChart.options.scales.y.ticks.stepSize = (maxTemp - minTemp) / (tempChart.options.scales.y.ticks.maxTicksLimit || 5);
+            tempChart.options.scales.y.min = allMinTemp != null ? Math.floor(allMinTemp) : 0;
+            tempChart.options.scales.y.max = allMaxTemp != null ? Math.ceil(allMaxTemp) : 100;
+            tempChart.options.scales.y.ticks.stepSize = (allMaxTemp - allMinTemp) / (tempChart.options.scales.y.ticks.maxTicksLimit || 5);
 
-            humChart.options.scales.y.min = minHum != null ? Math.floor(minHum) : 0;
-            humChart.options.scales.y.max = maxHum != null ? Math.ceil(maxHum) : 100;
-            humChart.options.scales.y.ticks.stepSize = (maxHum - minHum) / (humChart.options.scales.y.ticks.maxTicksLimit || 5);
+            humChart.options.scales.y.min = allMinHum != null ? Math.floor(allMinHum) : 0;
+            humChart.options.scales.y.max = allMaxHum != null ? Math.ceil(allMaxHum) : 100;
+            humChart.options.scales.y.ticks.stepSize = (allMaxHum - allMinHum) / (humChart.options.scales.y.ticks.maxTicksLimit || 5);
 
-            vpdChart.options.scales.y.min = minVpd != null ? Math.floor(minVpd * 10) / 10 : 0;
-            vpdChart.options.scales.y.max = maxVpd != null ? Math.ceil(maxVpd * 10) / 10 : 5;
-            vpdChart.options.scales.y.ticks.stepSize = (maxVpd - minVpd) / (vpdChart.options.scales.y.ticks.maxTicksLimit || 5);
+            vpdChart.options.scales.y.min = allMinVpd != null ? Math.floor(allMinVpd * 10) / 10 : 0;
+            vpdChart.options.scales.y.max = allMaxVpd != null ? Math.ceil(allMaxVpd * 10) / 10 : 5;
+            vpdChart.options.scales.y.ticks.stepSize = (allMaxVpd - allMinVpd) / (vpdChart.options.scales.y.ticks.maxTicksLimit || 5);
 
-            fanChart.options.scales.y.min = minFan != null ? Math.floor(minFan) : 0;
-            fanChart.options.scales.y.max = maxFan != null ? Math.ceil(maxFan) : 100;
-            fanChart.options.scales.y.ticks.stepSize = (maxFan - minFan) / (fanChart.options.scales.y.ticks.maxTicksLimit || 5);
+            fanChart.options.scales.y.min = allMinFan != null ? Math.floor(allMinFan) : 0;
+            fanChart.options.scales.y.max = allMaxFan != null ? Math.ceil(allMaxFan) : 100;
+            fanChart.options.scales.y.ticks.stepSize = (allMaxFan - allMinFan) / (fanChart.options.scales.y.ticks.maxTicksLimit || 5);
           }
 
           // Update charts
@@ -998,21 +1059,6 @@
           document.getElementById("timeSince").textContent = latestTimestampSec ? formatTimeElapsed(latestTimestampSec) : "--";
 
           latestTimestampSec = latest.time || null;
-          const tableBody = document.querySelector("#dataTable tbody");
-          tableBody.innerHTML = "";
-          processedData.slice(-30).forEach(entry => {
-            const date = new Date(entry.time * 1000);
-            const row = document.createElement("tr");
-            row.innerHTML = `
-              <td>${date.toLocaleTimeString("de-DE", { hour: '2-digit', minute: '2-digit' })}</td>
-              <td>${entry.temp != null ? entry.temp.toFixed(1) : "--"}</td>
-              <td>${entry.hum != null ? entry.hum.toFixed(1) : "--"}</td>
-              <td>${entry.vpd != null ? entry.vpd.toFixed(2) : "--"}</td>
-              <td>${entry.fan_speed != null ? entry.fan_speed.toFixed(0) : "--"}</td>
-            `;
-            tableBody.appendChild(row);
-          });
-
         } catch (err) {
           console.error("Fetch data error:", err.message);
           document.getElementById("latestTemp").textContent = "--";
@@ -1020,6 +1066,19 @@
           document.getElementById("latestVpd").textContent = "--";
           document.getElementById("latestFan").textContent = "--";
           document.getElementById("timeSince").textContent = "--";
+          // Reset all-time stats on error
+          document.getElementById("allMinTemp").textContent = "--";
+          document.getElementById("allAvgTemp").textContent = "--";
+          document.getElementById("allMaxTemp").textContent = "--";
+          document.getElementById("allMinHum").textContent = "--";
+          document.getElementById("allAvgHum").textContent = "--";
+          document.getElementById("allMaxHum").textContent = "--";
+          document.getElementById("allMinVpd").textContent = "--";
+          document.getElementById("allAvgVpd").textContent = "--";
+          document.getElementById("allMaxVpd").textContent = "--";
+          document.getElementById("allMinFan").textContent = "--";
+          document.getElementById("allAvgFan").textContent = "--";
+          document.getElementById("allMaxFan").textContent = "--";
         }
       }
 
@@ -1037,15 +1096,5 @@
         }
       }, 500);
     </script>
-  
-<div id="dataTableContainer" style="margin-top: 20px; background-color: #2a2a2a; padding: 10px; border-radius: 8px;">
-  <h3 style="text-align: center;">Таблиця останніх значень</h3>
-  <table id="dataTable" style="width: 100%; color: #e0e0e0; font-size: 14px;">
-    <thead>
-      <tr><th>Час</th><th>Температура (°C)</th><th>Вологість (%)</th><th>VPD (kPa)</th><th>Лю́фтер</th></tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-</div>
-</body>
+  </body>
 </html>
