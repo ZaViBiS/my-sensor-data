@@ -484,7 +484,14 @@
         }
 
         data.sort((a, b) => a.time - b.time);
-        const latest = data[data.length - 1] || {};
+        const r = await fetch("https://data.ygryk.de/last", {
+            method: "GET",
+            headers: { "Content-Type": "application/json", "Accept": "application/json" },
+            mode: "cors",
+            credentials: "omit"
+          });
+        const latest = await r.json()
+        console.log(latest)
 
         let processedData = data;
 
