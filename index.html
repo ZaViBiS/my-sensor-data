@@ -578,7 +578,7 @@
         document.getElementById("latestTemp").textContent = latest.temp != null ? `${latest.temp.toFixed(1)}°C` : "--";
         document.getElementById("latestHum").textContent = latest.hum != null ? `${latest.hum.toFixed(1)}%` : "--";
         document.getElementById("latestVpd").textContent = latest.vpd != null ? `${latest.vpd.toFixed(2)} kPa` : "--";
-        document.getElementById("latestFan").textContent = latest.fan_speed != null ? `${latest.fan_speed.toFixed(0)}` : "--";
+        document.getElementById("latestFan").textContent = latest.fan_speed != null ? `${latest.fan_speed.toFixed(0)}%` : "--";
 
         latestTimestampSec = latest.time || null;
       }
