@@ -24,7 +24,14 @@
         font-size: 24px;
         margin-bottom: 20px;
       }
-      .latest-values span {
+      .average-values { /* Added style for average values */
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        font-size: 18px; /* Smaller font size */
+        margin-bottom: 20px;
+      }
+      .latest-values span, .average-values span { /* Combined styles */
         padding: 10px 20px;
         background-color: #2a2a2a;
         border-radius: 8px;
@@ -66,12 +73,12 @@
         min-height: 300px; /* Added to ensure minimum visibility */
       }
       @media (max-width: 767px) {
-        .latest-values {
+        .latest-values, .average-values { /* Combined styles */
           flex-direction: column;
           gap: 10px;
           font-size: 18px; /* Reduced font size for better fit */
         }
-        .latest-values span {
+        .latest-values span, .average-values span { /* Combined styles */
           padding: 8px 16px; /* Adjusted padding for smaller screens */
         }
         .time-range {
@@ -104,6 +111,12 @@
         <span class="hum" id="latestHum">--</span>
         <span class="vpd" id="latestVpd">--</span>
         <span class="fan" id="latestFan">--</span>
+      </div>
+      <div class="average-values">
+        <span class="temp" id="averageTemp">--</span>
+        <span class="hum" id="averageHum">--</span>
+        <span class="vpd" id="averageVpd">--</span>
+        <span class="fan" id="averageFan">--</span>
       </div>
       <div class="time-range">
         <button class="active" onclick="setTimeRange('hour')">Stunde</button>
@@ -169,23 +182,23 @@
           interaction: { mode: "index", intersect: false },
           layout: { padding: 0 },
           scales: {
-            x: { 
-              type: "time", 
+            x: {
+              type: "time",
               time: { unit: "minute", tooltipFormat: "HH:mm", displayFormats: { minute: "HH:mm" } },
               ticks: { color: "#e0e0e0", padding: 0, maxTicksLimit: 6 }, // Reduced ticks for mobile readability
-              title: { display: true, text: "Zeit", color: "#e0e0e0" }, 
-              border: { display: false } 
+              title: { display: true, text: "Zeit", color: "#e0e0e0" },
+              border: { display: false }
             },
-            y: { 
-              title: { display: true, text: "Temperatur", color: "#E57373" }, 
+            y: {
+              title: { display: true, text: "Temperatur", color: "#E57373" },
               ticks: { color: "#E57373", padding: 0, maxTicksLimit: 5 }, // Reduced ticks for clarity
-              border: { display: false } 
+              border: { display: false }
             }
           },
           plugins: {
             legend: { display: false },
             tooltip: {
-              callbacks: { 
+              callbacks: {
                 label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)}°C`,
                 title: tooltipItems => new Date(tooltipItems[0].parsed.x).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', hour12: false })
               }
@@ -232,23 +245,23 @@
           interaction: { mode: "index", intersect: false },
           layout: { padding: 0 },
           scales: {
-            x: { 
-              type: "time", 
+            x: {
+              type: "time",
               time: { unit: "minute", tooltipFormat: "HH:mm", displayFormats: { minute: "HH:mm" } },
-              ticks: { color: "#e0e0e0", padding: 0, maxTicksLimit: 6 }, 
-              title: { display: true, text: "Zeit", color: "#e0e0e0" }, 
-              border: { display: false } 
+              ticks: { color: "#e0e0e0", padding: 0, maxTicksLimit: 6 },
+              title: { display: true, text: "Zeit", color: "#e0e0e0" },
+              border: { display: false }
             },
-            y: { 
-              title: { display: true, text: "Luftfeuchtigkeit", color: "#64B5F6" }, 
-              ticks: { color: "#64B5F6", padding: 0, maxTicksLimit: 5 }, 
-              border: { display: false } 
+            y: {
+              title: { display: true, text: "Luftfeuchtigkeit", color: "#64B5F6" },
+              ticks: { color: "#64B5F6", padding: 0, maxTicksLimit: 5 },
+              border: { display: false }
             }
           },
           plugins: {
             legend: { display: false },
             tooltip: {
-              callbacks: { 
+              callbacks: {
                 label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)}%`,
                 title: tooltipItems => new Date(tooltipItems[0].parsed.x).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', hour12: false })
               }
@@ -295,23 +308,23 @@
           interaction: { mode: "index", intersect: false },
           layout: { padding: 0 },
           scales: {
-            x: { 
-              type: "time", 
+            x: {
+              type: "time",
               time: { unit: "minute", tooltipFormat: "HH:mm", displayFormats: { minute: "HH:mm" } },
-              ticks: { color: "#e0e0e0", padding: 0, maxTicksLimit: 6 }, 
-              title: { display: true, text: "Zeit", color: "#e0e0e0" }, 
-              border: { display: false } 
+              ticks: { color: "#e0e0e0", padding: 0, maxTicksLimit: 6 },
+              title: { display: true, text: "Zeit", color: "#e0e0e0" },
+              border: { display: false }
             },
-            y: { 
-              title: { display: true, text: "VPD", color: "#FFD54F" }, 
-              ticks: { color: "#FFD54F", padding: 0, maxTicksLimit: 5 }, 
-              border: { display: false } 
+            y: {
+              title: { display: true, text: "VPD", color: "#FFD54F" },
+              ticks: { color: "#FFD54F", padding: 0, maxTicksLimit: 5 },
+              border: { display: false }
             }
           },
           plugins: {
             legend: { display: false },
             tooltip: {
-              callbacks: { 
+              callbacks: {
                 label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(2)} kPa`,
                 title: tooltipItems => new Date(tooltipItems[0].parsed.x).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', hour12: false })
               }
@@ -358,23 +371,23 @@
           interaction: { mode: "index", intersect: false },
           layout: { padding: 0 },
           scales: {
-            x: { 
-              type: "time", 
+            x: {
+              type: "time",
               time: { unit: "minute", tooltipFormat: "HH:mm", displayFormats: { minute: "HH:mm" } },
-              ticks: { color: "#e0e0e0", padding: 0, maxTicksLimit: 6 }, 
-              title: { display: true, text: "Zeit", color: "#e0e0e0" }, 
-              border: { display: false } 
+              ticks: { color: "#e0e0e0", padding: 0, maxTicksLimit: 6 },
+              title: { display: true, text: "Zeit", color: "#e0e0e0" },
+              border: { display: false }
             },
-            y: { 
-              title: { display: true, text: "Lüfter", color: "#4DB6AC" }, 
-              ticks: { color: "#4DB6AC", padding: 0, maxTicksLimit: 5 }, 
-              border: { display: false } 
+            y: {
+              title: { display: true, text: "Lüfter", color: "#4DB6AC" },
+              ticks: { color: "#4DB6AC", padding: 0, maxTicksLimit: 5 },
+              border: { display: false }
             }
           },
           plugins: {
             legend: { display: false },
             tooltip: {
-              callbacks: { 
+              callbacks: {
                 label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y?.toFixed(0) || '--'}`,
                 title: tooltipItems => new Date(tooltipItems[0].parsed.x).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', hour12: false })
               }
@@ -535,6 +548,7 @@
         const avgVpdData = processedData.map(entry => ({ x: entry.time * 1000, y: avgVpd }));
         const avgFanData = processedData.map(entry => ({ x: entry.time * 1000, y: avgFan }));
 
+
         tempChart.data.datasets[0].data = tempData;
         tempChart.data.datasets[1].data = avgTempData;
         tempChart.options.scales.y.min = minTemp != null ? Math.floor(minTemp) : 0;
@@ -579,6 +593,13 @@
         document.getElementById("latestHum").textContent = latest.hum != null ? `${latest.hum.toFixed(1)}%` : "--";
         document.getElementById("latestVpd").textContent = latest.vpd != null ? `${latest.vpd.toFixed(2)} kPa` : "--";
         document.getElementById("latestFan").textContent = latest.fan_speed != null ? `${latest.fan_speed.toFixed(0)}%` : "--";
+
+        // Update average values
+        document.getElementById("averageTemp").textContent = avgTemp != null ? `Avg Temp: ${avgTemp.toFixed(1)}°C` : "Avg Temp: --";
+        document.getElementById("averageHum").textContent = avgHum != null ? `Avg Hum: ${avgHum.toFixed(1)}%` : "Avg Hum: --";
+        document.getElementById("averageVpd").textContent = avgVpd != null ? `Avg VPD: ${avgVpd.toFixed(2)} kPa` : "Avg VPD: --";
+        document.getElementById("averageFan").textContent = avgFan != null ? `Avg Fan: ${avgFan.toFixed(0)}%` : "Avg Fan: --";
+
 
         latestTimestampSec = latest.time || null;
       }
